@@ -53,3 +53,10 @@ bulk_auto_assignment_job:
   cron: '*/15 * * * *'
   class: 'Inboxes::BulkAutoAssignmentJob'
   queue: scheduled_jobs
+
+# executed every minute
+# to manage agent availability based on activity
+activity_based_presence_job:
+  cron: '*/1 * * * *'
+  class: 'ActivityBasedPresenceJob'
+  queue: low

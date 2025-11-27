@@ -104,6 +104,27 @@
           "ERROR": "Falha ao atualizar configuração de transcrição de áudio"
         }
       },
+      "ACTIVITY_PRESENCE": {
+        "TITLE": "Presença Baseada em Atividade",
+        "NOTE": "Gerencie automaticamente a disponibilidade dos agentes com base em sua atividade de mensagens. Os agentes serão marcados como online ao enviar mensagens e offline após um período de inatividade. O sistema respeita o status 'ocupado' como pausas intencionais.",
+        "INACTIVITY_TIMEOUT": {
+          "LABEL": "Tempo de inatividade",
+          "HELP": "Tempo sem enviar mensagens antes de marcar o agente como offline",
+          "ERROR": "O tempo de inatividade deve ser de pelo menos 1 minuto"
+        },
+        "BUSY_TIMEOUT": {
+          "LABEL": "Duração máxima de ocupado",
+          "HELP": "Se um agente permanecer 'ocupado' por mais tempo, será marcado como offline (ajuda a detectar esquecimento de mudança de status)",
+          "ERROR": "O tempo de ocupado deve ser de pelo menos 1 hora"
+        },
+        "MINUTES": "minutos",
+        "HOURS": "horas",
+        "UPDATE_BUTTON": "Salvar Alterações",
+        "API": {
+          "SUCCESS": "Configurações de presença baseada em atividade atualizadas com sucesso",
+          "ERROR": "Falha ao atualizar configurações de presença baseada em atividade"
+        }
+      },
       "AUTO_RESOLVE_DURATION": {
         "LABEL": "Tempo de inatividade para resolução",
         "HELP": "Tempo de inatividade após o qual a conversa deve ser encerrada automaticamente",

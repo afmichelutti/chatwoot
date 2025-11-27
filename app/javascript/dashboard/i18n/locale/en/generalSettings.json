@@ -104,6 +104,27 @@
           "ERROR": "Failed to update audio transcription setting"
         }
       },
+      "ACTIVITY_PRESENCE": {
+        "TITLE": "Activity-Based Presence",
+        "NOTE": "Automatically manage agent availability based on their messaging activity. Agents will be marked online when sending messages, and offline after a period of inactivity. The system respects 'busy' status as intentional breaks.",
+        "INACTIVITY_TIMEOUT": {
+          "LABEL": "Inactivity timeout",
+          "HELP": "Time without sending messages before marking agent as offline",
+          "ERROR": "Inactivity timeout must be at least 1 minute"
+        },
+        "BUSY_TIMEOUT": {
+          "LABEL": "Maximum busy duration",
+          "HELP": "If an agent stays 'busy' longer than this, they'll be marked offline (helps catch forgotten status changes)",
+          "ERROR": "Busy timeout must be at least 1 hour"
+        },
+        "MINUTES": "minutes",
+        "HOURS": "hours",
+        "UPDATE_BUTTON": "Save Changes",
+        "API": {
+          "SUCCESS": "Activity-based presence settings updated successfully",
+          "ERROR": "Failed to update activity-based presence settings"
+        }
+      },
       "AUTO_RESOLVE_DURATION": {
         "LABEL": "Inactivity duration for resolution",
         "HELP": "Duration after a conversation should auto resolve if there is no activity",

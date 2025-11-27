@@ -44,11 +44,20 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def update
-    @account.assign_attributes(account_params.slice(:name, :locale, :domain, :support_email))
+    # Detectar se activity_based_presence_enabled está sendo habilitado
+    was_disabled = !@account.activity_based_presence_enabled
+    will_be_enabled = ActiveModel::Type::Boolean.new.cast(account_params[:activity_based_presence_enabled])
+    enabling_activity_presence = was_disabled && will_be_enabled
+
+    @account.assign_attributes(account_params.slice(:name, :locale, :domain, :support_email, :activity_based_presence_enabled,
+:activity_based_presence_config))
     @account.custom_attributes.merge!(custom_attributes_params)
     @account.settings.merge!(settings_params)
     @account.custom_attributes['onboarding_step'] = 'invite_team' if @account.custom_attributes['onboarding_step'] == 'account_update'
     @account.save!
+
+    # Se está habilitando activity-based presence, configurar automaticamente todos os agentes
+    enable_activity_presence_for_all_agents if enabling_activity_presence
   end
 
   def update_active_at
@@ -58,6 +67,12 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   private
+
+  def enable_activity_presence_for_all_agents
+    # Quando activity-based presence é habilitado, configurar todos os agentes para participar
+    updated_count = @account.account_users.where(auto_offline: true).update_all(auto_offline: false)
+    Rails.logger.info "[ActivityPresence] Enabled for #{updated_count} agents in account #{@account.id}"
+  end
 
   def ensure_account_name
     # ensure that account_name and user_full_name is present
@@ -84,7 +99,8 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def account_params
-    params.permit(:account_name, :email, :name, :password, :locale, :domain, :support_email, :user_full_name)
+    params.permit(:account_name, :email, :name, :password, :locale, :domain, :support_email, :user_full_name,
+                  :activity_based_presence_enabled, activity_based_presence_config: {})
   end
 
   def custom_attributes_params

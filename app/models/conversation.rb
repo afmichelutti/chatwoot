@@ -32,6 +32,11 @@
 # Indexes
 #
 #  conv_acid_inbid_stat_asgnid_idx                    (account_id,inbox_id,status,assignee_id)
+#  idx_conversations_active_account                   (account_id,status) WHERE (status = ANY (ARRAY[0, 2]))
+#  idx_conversations_assignee_account                 (account_id,assignee_id) WHERE (assignee_id IS NOT NULL)
+#  idx_conversations_multi_filter                     (account_id,status,updated_at,assignee_id,created_at)
+#  idx_conversations_resolved_account_date            (account_id,status,updated_at) WHERE (status = 1)
+#  idx_conversations_response_time                    (account_id,created_at,first_reply_created_at) WHERE (first_reply_created_at IS NOT NULL)
 #  index_conversations_on_account_id                  (account_id)
 #  index_conversations_on_account_id_and_display_id   (account_id,display_id) UNIQUE
 #  index_conversations_on_assignee_id_and_account_id  (assignee_id,account_id)

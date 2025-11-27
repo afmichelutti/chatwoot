@@ -1,0 +1,187 @@
+# CHATWOOT SESSION AND TOKEN MANAGEMENT ANALYSIS
+
+## SUMMARY
+
+Chatwoot uses DeviseTokenAuth for authentication combined with Redis-based presence tracking and ActionCable WebSockets. The online/offline alternation issue likely stems from multiple sessions, stale Redis presence data, or WebSocket connection conflicts.
+
+## CRITICAL COMPONENTS
+
+1. AUTHENTICATION TOKENS
+   - Access Token (users.tokens) - Managed by DeviseTokenAuth
+   - Pubsub Token (users.pubsub_token) - For WebSocket authentication
+   - Access API Token (access_tokens table) - Personal API tokens
+
+2. AVAILABILITY TRACKING
+   - Database: account_users.availability (0=online, 1=offline, 2=busy)
+   - Redis Hash: ONLINE_STATUS::{account_id} -> {user_id: status}
+   - Redis Sorted Set: ONLINE_PRESENCE::{account_id}::{USERS|CONTACTS} -> timestamp
+
+3. PRESENCE DURATION
+   - Default: 20 seconds (configurable via ENV['PRESENCE_DURATION'])
+   - After 20 seconds without update, user appears offline
+
+## ROOT CAUSES OF ALTERNATING STATUS
+
+1. Pubsub token NOT regenerated on login/logout
+   - File: app/models/concerns/pubsubable.rb
+   - Token only rotates on password change
+   - Old WebSocket connection may still be active
+   - New login with same token creates confusion
+
+2. Redis presence expires every 20 seconds
+   - File: lib/online_status_tracker.rb
+   - If user idle >20 seconds, appears offline
+   - Next presence update makes them online again
+
+3. Multiple sources of truth for availability
+   - Database availability column
+   - Redis status hash
+   - Redis presence sorted set
+   - These can get out of sync
+
+4. Logout doesn't invalidate WebSocket tokens
+   - Old connection still updates Redis
+   - Stale data persists after logout
+
+## KEY FILES WITH LINE NUMBERS
+
+### Authentication
+- app/controllers/devise_overrides/sessions_controller.rb:1-112
+  * Line 99-100: create_token called on login
+  * Line 19: Super called for standard devise auth
+
+- config/initializers/devise_token_auth.rb
+  * Line 10: token_lifespan = 2.months
+  * Line 14: remove_tokens_after_password_reset = true
+  * Line 18: max_number_of_devices = 25
+
+### Token Management
+- app/models/access_token.rb:1-21
+  * Polymorphic owner relationship
+  * has_secure_token :token
+
+- app/controllers/api/v1/profiles_controller.rb:41-44
+  * reset_access_token method
+  * Calls: @user.access_token.regenerate_token
+
+### Pubsub Token
+- app/models/concerns/pubsubable.rb:1-26
+  * Line 8: has_secure_token :pubsub_token
+  * Line 9: before_save :rotate_pubsub_token
+  * Line 18: Only rotates if password changes
+
+### Availability & Presence
+- app/models/account_user.rb:27-87
+  * Line 35: enum availability { online: 0, offline: 1, busy: 2 }
+  * Line 41: after_save :update_presence_in_redis
+  * Line 80: OnlineStatusTracker.set_status called on availability change
+
+- lib/online_status_tracker.rb:1-77
+  * Line 3: PRESENCE_DURATION = 20 seconds
+  * Line 8-10: update_presence - adds to Redis sorted set
+  * Line 12-15: get_presence - checks if within PRESENCE_DURATION
+  * Line 29-31: set_status - stores in Redis hash
+  * Line 54-61: get_available_users - main availability getter
+  * Line 63-67: get_availability_from_db - fallback to database
+
+- app/models/concerns/availability_statusable.rb:1-30
+  * Line 23-29: user_availability_status method
+  * Returns offline if no presence
+  * Falls back to database if Redis missing
+
+### WebSocket Authentication
+- app/channels/room_channel.rb:1-59
+  * Line 42-48: current_user authenticated by pubsub_token
+  * Line 28: stream_from pubsub_token
+  * Line 35: OnlineStatusTracker.update_presence called
+  * Line 24: broadcast presence updates
+
+- app/models/concerns/pubsubable.rb:1-26
+  * Generates and manages pubsub_token
+  * Unique index on pubsub_token
+
+### Frontend WebSocket
+- app/javascript/shared/helpers/BaseActionCableConnector.js:1-91
+  * Line 13-19: subscription created with pubsub_token
+  * Line 36-42: triggerPresenceInterval every 20 seconds
+  * Line 21-22: updatePresence performed
+
+- app/javascript/dashboard/helper/actionCable.js:1-209
+  * Line 58-63: onPresenceUpdate handler
+  * Line 94: onLogout handler calls AuthAPI.logout()
+
+### Presence Broadcasting
+- app/listeners/action_cable_listener.rb:1-209
+  * Uses user_tokens(account, agents) to get pubsub_tokens
+  * Broadcasts to all listening agents
+
+## DATABASE TABLES
+
+Users Table (from migrate/20230426130150_init_schema.rb):
+- tokens (json) - DeviseTokenAuth managed
+- pubsub_token (string, unique) - WebSocket auth
+- availability (integer) - DEPRECATED, use account_users
+- encrypted_password - For authentication
+
+Account Users Table:
+- availability (integer) - Current status per account
+- auto_offline (boolean, default: true) - Auto-offline on inactivity
+- active_at (datetime) - Last activity
+
+Access Tokens Table:
+- owner_type (string) - Polymorphic
+- owner_id (bigint)
+- token (string, unique)
+
+## REDIS STRUCTURE
+
+ONLINE_STATUS::{account_id} = Hash
+  Field: user_id
+  Value: "online" | "offline" | "busy"
+  Set by: OnlineStatusTracker.set_status
+  Get by: OnlineStatusTracker.get_status
+
+ONLINE_PRESENCE::{account_id}::USERS = Sorted Set
+  Score: Unix timestamp (time of last update)
+  Member: user_id
+  Set by: OnlineStatusTracker.update_presence
+  Get by: OnlineStatusTracker.get_presence
+
+ONLINE_PRESENCE::{account_id}::CONTACTS = Sorted Set
+  Same structure as above but for contacts
+
+## WHY TOKEN REGENERATION HELPS
+
+When reset_access_token is called:
+1. Invalidates old access_token (personal API key)
+2. Generates new token
+3. May trigger frontend to re-authenticate
+4. Could cause WebSocket reconnection
+5. New connection = new presence tracking
+
+However, does NOT:
+- Regenerate pubsub_token
+- Kill old WebSocket connections
+- Clear old Redis entries
+- Invalidate devise tokens in users.tokens
+
+## CONFIGURATION AFFECTING BEHAVIOR
+
+devise_token_auth.rb:
+- change_headers_on_each_request = false
+  * Token doesn't change after each request
+- token_lifespan = 2 months
+  * Long lived tokens
+- remove_tokens_after_password_reset = true
+  * Old tokens cleared on password change
+- max_number_of_devices = 25
+  * Up to 25 concurrent devices allowed
+
+Online Status Tracker:
+- PRESENCE_DURATION = 20 seconds (env configurable)
+  * User appears offline after 20s inactivity
+
+Profiles Controller:
+- auto_offline parameter on availability endpoint
+  * Boolean flag for auto-offline feature
+

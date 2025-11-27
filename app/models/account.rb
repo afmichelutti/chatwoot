@@ -2,20 +2,25 @@
 #
 # Table name: accounts
 #
-#  id                    :integer          not null, primary key
-#  auto_resolve_duration :integer
-#  custom_attributes     :jsonb
-#  domain                :string(100)
-#  feature_flags         :bigint           default(0), not null
-#  internal_attributes   :jsonb            not null
-#  limits                :jsonb
-#  locale                :integer          default("en")
-#  name                  :string           not null
-#  settings              :jsonb
-#  status                :integer          default("active")
-#  support_email         :string(100)
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
+#  id                                 :integer          not null, primary key
+#  activity_based_presence_config     :jsonb            not null
+#  activity_based_presence_enabled    :boolean          default(FALSE), not null
+#  auto_assign_team_on_agent_transfer :boolean          default(FALSE), not null
+#  auto_assign_teams_on_transfer      :boolean          default(FALSE), not null
+#  auto_resolve_duration              :integer
+#  custom_attributes                  :jsonb
+#  domain                             :string(100)
+#  feature_flags                      :bigint           default(33029775), not null
+#  filter_conversations_by_team       :boolean          default(FALSE), not null
+#  internal_attributes                :jsonb            not null
+#  limits                             :jsonb
+#  locale                             :integer          default("pt_BR")
+#  name                               :string           not null
+#  settings                           :jsonb
+#  status                             :integer          default("active")
+#  support_email                      :string(100)
+#  created_at                         :datetime         not null
+#  updated_at                         :datetime         not null
 #
 # Indexes
 #

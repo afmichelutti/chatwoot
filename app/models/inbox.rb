@@ -5,6 +5,7 @@
 # Table name: inboxes
 #
 #  id                            :integer          not null, primary key
+#  additional_settings           :jsonb            not null
 #  allow_messages_after_resolved :boolean          default(TRUE)
 #  auto_assignment_config        :jsonb
 #  business_name                 :string
@@ -16,11 +17,16 @@
 #  enable_email_collect          :boolean          default(TRUE)
 #  greeting_enabled              :boolean          default(FALSE)
 #  greeting_message              :string
+#  instanceid                    :string(100)
 #  lock_to_single_conversation   :boolean          default(FALSE), not null
 #  name                          :string           not null
+#  number                        :string(20)
 #  out_of_office_message         :string
 #  sender_name_type              :integer          default("friendly"), not null
+#  serverurl                     :string(255)
+#  status                        :string(25)
 #  timezone                      :string           default("UTC")
+#  type                          :string(50)
 #  working_hours_enabled         :boolean          default(FALSE)
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null

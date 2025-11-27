@@ -25,11 +25,12 @@
 # Indexes
 #
 #  idx_messages_account_content_created                 (account_id,content_type,created_at)
+#  idx_messages_account_date_type                       (account_id,created_at,message_type,private) WHERE ((private = false) AND (message_type = ANY (ARRAY[0, 1])))
+#  idx_messages_human_detection                         (account_id,conversation_id,sender_type,message_type,private) WHERE (((sender_type)::text = 'User'::text) AND (message_type = 1) AND (private = false))
 #  index_messages_on_account_created_type               (account_id,created_at,message_type)
 #  index_messages_on_account_id                         (account_id)
 #  index_messages_on_account_id_and_inbox_id            (account_id,inbox_id)
 #  index_messages_on_additional_attributes_campaign_id  (((additional_attributes -> 'campaign_id'::text))) USING gin
-#  index_messages_on_content                            (content) USING gin
 #  index_messages_on_conversation_account_type_created  (conversation_id,account_id,message_type,created_at)
 #  index_messages_on_conversation_id                    (conversation_id)
 #  index_messages_on_created_at                         (created_at)
@@ -306,10 +307,23 @@ class Message < ApplicationRecord
     send_reply
     execute_message_template_hooks
     update_contact_activity
+    update_agent_presence_on_message
   end
 
   def update_contact_activity
     sender.update(last_activity_at: DateTime.now) if sender.is_a?(Contact)
+  end
+
+  def update_agent_presence_on_message
+    # Atualiza o status do agente para ONLINE imediatamente quando envia mensagem
+    # Executa via job assíncrono para não travar a criação da mensagem
+    return unless sender_type == 'User' && sender_id.present?
+    return unless account.activity_based_presence_enabled?
+
+    # Enfileira job com alta prioridade (processado em milissegundos)
+    UpdateAgentPresenceJob.perform_later(account_id, sender_id)
+  rescue StandardError => e
+    Rails.logger.error "[ActivityPresence] Error enqueuing agent presence update: #{e.message}"
   end
 
   def update_waiting_since
