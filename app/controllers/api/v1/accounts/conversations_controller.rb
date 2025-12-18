@@ -161,6 +161,24 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def conversation
     @conversation ||= Current.account.conversations.find_by!(display_id: params[:id])
     authorize @conversation.inbox, :show?
+
+    # Check if user has permission to access this specific conversation based on custom role
+    check_conversation_permission!
+  end
+
+  def check_conversation_permission!
+    # Apply permission-based filtering to ensure user can access this conversation
+    filtered_conversations = Conversations::PermissionFilterService.new(
+      Conversation.where(id: @conversation.id),
+      Current.user,
+      Current.account
+    ).perform
+
+    # If the conversation is not in the filtered results, user doesn't have permission
+    return if filtered_conversations.exists?
+
+    # Render 403 Forbidden if user doesn't have permission
+    render json: { error: 'You do not have permission to access this conversation' }, status: :forbidden
   end
 
   def inbox
