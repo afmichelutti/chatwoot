@@ -1,6 +1,6 @@
 # Troubleshooting: Conversas Corrompidas (Erro 500)
 
-**Data:** 18 de Dezembro de 2025
+**Data:** 18-19 de Dezembro de 2025
 **Versão:** Chatwoot v4.7.0-custom
 **Ambiente:** Produção (Omniflex)
 
@@ -24,10 +24,12 @@ Este documento descreve um problema recorrente onde conversas com dados órfãos
 
 ### Histórico de Ocorrências
 
-| Data | Usuário | Tipo de Lista | Conversa ID | Status |
-|------|---------|---------------|-------------|---------|
-| 2025-12-18 | Cloves | "Minhas conversas" | #164207 (ID: 278928) | ✅ Resolvido |
-| 2025-12-18 | Cloves | "Não atribuídas" | #159895 (ID: 265294) | ✅ Resolvido |
+| Data | Account | Tipo de Lista | Conversa IDs | Tipo de Corrupção | Status |
+|------|---------|---------------|--------------|-------------------|---------|
+| 2025-12-18 | 1 (Cloves) | "Minhas conversas" | #164207 (ID: 278928) | contact_inbox órfão | ✅ Resolvido |
+| 2025-12-18 | 1 (Cloves) | "Não atribuídas" | #159895 (ID: 265294) | contact_inbox órfão | ✅ Resolvido |
+| 2025-12-19 | 56 | Todos filtros | IDs: 281760, 281761, 281762, 281764 | contact + contact_inbox órfãos | ✅ Resolvido |
+| 2025-12-19 | Múltiplas (1, 59) | - | 14 conversas | team órfão + status inválido (59) | ✅ Resolvido |
 
 ---
 
@@ -65,11 +67,23 @@ at app/models/message.rb:171 in 'conversation_push_event_data'
 
 ## 🐛 Causa Raiz
 
-### Problema: Relacionamento Órfão
+### Problema: Relacionamentos Órfãos
 
-Conversas apontam para `contact_inbox_id` que **não existe mais** na tabela `contact_inboxes`.
+Conversas apontam para IDs de registros que **não existem mais** em suas respectivas tabelas.
 
-**Cenário:**
+#### Tipos de Corrupção Identificados:
+
+| Tipo | Campo | Tabela Órfã | Risco de Erro 500 |
+|------|-------|-------------|-------------------|
+| **contact_inbox órfão** | `contact_inbox_id` | `contact_inboxes` | 🔴 **ALTO** |
+| **contact órfão** | `contact_id` | `contacts` | 🔴 **ALTO** |
+| **inbox órfão** | `inbox_id` | `inboxes` | 🔴 **ALTO** |
+| **assignee órfão** | `assignee_id` | `users` | 🟡 **MÉDIO** |
+| **team órfão** | `team_id` | `teams` | 🟡 **MÉDIO** |
+| **status inválido** | `status` | - | 🔴 **MUITO ALTO** |
+
+#### Cenário Exemplo (contact_inbox órfão):
+
 ```
 conversations.contact_inbox_id = 276584
 contact_inboxes.id = 276584 (DELETADO)
@@ -85,12 +99,28 @@ Retorna:
 nil.source_id  # => NoMethodError
 ```
 
+#### Cenário Exemplo (status inválido):
+
+```
+conversations.status = 59  # Valores válidos: 0, 1, 2, 3
+```
+
+Status válidos:
+- `0` = open
+- `1` = resolved
+- `2` = pending
+- `3` = snoozed
+
+Qualquer outro valor causa comportamento imprevisível.
+
 ### Por que isso acontece?
 
-1. **Foreign Key sem CASCADE**: A FK não tem `ON DELETE CASCADE`
-2. **Deleção manual**: ContactInbox deletado manualmente via SQL ou script
-3. **Bug em migrations**: Alguma migration antiga deletou contact_inboxes sem atualizar conversations
-4. **Race condition**: Deleção de inbox enquanto conversa estava sendo criada
+1. **Foreign Key sem CASCADE**: As FKs não têm `ON DELETE CASCADE` ou `ON DELETE SET NULL`
+2. **Deleção manual**: Registros deletados manualmente via SQL ou script
+3. **Bug em migrations**: Migrations antigas deletaram registros sem atualizar conversations
+4. **Race condition**: Deleção de registros enquanto conversa estava sendo criada/atualizada
+5. **Importação/Sync incorreta**: Dados corrompidos durante importação ou sincronização
+6. **Bug em código**: Código antigo que modifica status diretamente sem validação
 
 ---
 
@@ -102,7 +132,7 @@ Crie um arquivo `find_corrupted_conversations.rb`:
 
 ```ruby
 # find_corrupted_conversations.rb
-# Encontra todas as conversas corrompidas em uma conta
+# Encontra TODAS as conversas corrompidas em uma conta (verifica TODOS os relacionamentos)
 
 account_id = ARGV[0]&.to_i || 1
 
@@ -117,19 +147,55 @@ puts "Total de conversas abertas/pendentes: #{conversations.count}"
 puts "\n==== Verificando integridade ===="
 
 corrupted = []
+orphan_types = {
+  contact: [],
+  inbox: [],
+  contact_inbox: [],
+  assignee: [],
+  team: []
+}
 
 conversations.find_each do |conv|
-  # Verificar se contact_inbox existe
+  issues = []
+
+  # Verificar contact órfão
+  if conv.contact_id.present? && conv.contact.nil?
+    issues << 'contact'
+    orphan_types[:contact] << conv.id
+  end
+
+  # Verificar inbox órfão
+  if conv.inbox_id.present? && conv.inbox.nil?
+    issues << 'inbox'
+    orphan_types[:inbox] << conv.id
+  end
+
+  # Verificar contact_inbox órfão
   if conv.contact_inbox_id.present? && conv.contact_inbox.nil?
+    issues << 'contact_inbox'
+    orphan_types[:contact_inbox] << conv.id
+  end
+
+  # Verificar assignee órfão
+  if conv.assignee_id.present? && conv.assignee.nil?
+    issues << 'assignee'
+    orphan_types[:assignee] << conv.id
+  end
+
+  # Verificar team órfão
+  if conv.team_id.present? && conv.team.nil?
+    issues << 'team'
+    orphan_types[:team] << conv.id
+  end
+
+  if issues.any?
     corrupted << {
       id: conv.id,
       display_id: conv.display_id,
-      contact_inbox_id: conv.contact_inbox_id,
-      assignee_id: conv.assignee_id,
-      status: conv.status
+      status: conv.status,
+      issues: issues
     }
-
-    print "❌ "
+    print "❌"
   else
     print "."
   end
@@ -143,10 +209,16 @@ puts "Conversas verificadas: #{conversations.count}"
 puts "Conversas corrompidas: #{corrupted.length}"
 
 if corrupted.any?
+  # Mostrar estatísticas por tipo
+  puts "\n==== Tipos de Corrupção ===="
+  orphan_types.each do |type, ids|
+    next if ids.empty?
+    puts "  #{type.to_s.upcase} órfão: #{ids.length} conversas"
+  end
+
   puts "\n==== Conversas Corrompidas ===="
   corrupted.each do |c|
-    assignee = c[:assignee_id] ? "Agente #{c[:assignee_id]}" : "Não atribuída"
-    puts "  ##{c[:display_id]} (ID: #{c[:id]}) - #{assignee} - contact_inbox_id: #{c[:contact_inbox_id]}"
+    puts "  ##{c[:display_id]} (ID: #{c[:id]}) - Problemas: #{c[:issues].join(', ')}"
   end
 
   puts "\n==== Comando para resolver ===="
@@ -500,7 +572,60 @@ end
 
 ## 📊 Queries SQL Úteis
 
-### 1. Encontrar todas as conversas corrompidas
+### 0. Query COMPLETA - Encontrar TODOS os Tipos de Corrupção
+
+```sql
+-- Query completa que verifica TODOS os tipos de relacionamentos órfãos
+SELECT
+    c.id,
+    c.display_id,
+    c.account_id,
+    c.status,
+    c.created_at,
+    -- Identificar tipo de problema
+    CASE
+        WHEN c.contact_id IS NOT NULL AND ct.id IS NULL THEN 'CONTACT_ORPHAN'
+        ELSE 'OK'
+    END AS contact_status,
+    CASE
+        WHEN c.inbox_id IS NOT NULL AND ib.id IS NULL THEN 'INBOX_ORPHAN'
+        ELSE 'OK'
+    END AS inbox_status,
+    CASE
+        WHEN c.contact_inbox_id IS NOT NULL AND ci.id IS NULL THEN 'CONTACT_INBOX_ORPHAN'
+        ELSE 'OK'
+    END AS contact_inbox_status,
+    CASE
+        WHEN c.assignee_id IS NOT NULL AND u.id IS NULL THEN 'ASSIGNEE_ORPHAN'
+        ELSE 'OK'
+    END AS assignee_status,
+    CASE
+        WHEN c.team_id IS NOT NULL AND t.id IS NULL THEN 'TEAM_ORPHAN'
+        ELSE 'OK'
+    END AS team_status,
+    CASE
+        WHEN c.status NOT IN (0, 1, 2, 3) THEN 'INVALID_STATUS'
+        ELSE 'OK'
+    END AS status_validation
+FROM conversations c
+LEFT JOIN contacts ct ON c.contact_id = ct.id
+LEFT JOIN inboxes ib ON c.inbox_id = ib.id
+LEFT JOIN contact_inboxes ci ON c.contact_inbox_id = ci.id
+LEFT JOIN users u ON c.assignee_id = u.id
+LEFT JOIN teams t ON c.team_id = t.id
+WHERE c.status IN (0, 2)  -- open, pending (ou remover para ver todas)
+  AND (
+    (c.contact_id IS NOT NULL AND ct.id IS NULL) OR
+    (c.inbox_id IS NOT NULL AND ib.id IS NULL) OR
+    (c.contact_inbox_id IS NOT NULL AND ci.id IS NULL) OR
+    (c.assignee_id IS NOT NULL AND u.id IS NULL) OR
+    (c.team_id IS NOT NULL AND t.id IS NULL) OR
+    c.status NOT IN (0, 1, 2, 3)  -- Status inválido
+  )
+ORDER BY c.account_id, c.id;
+```
+
+### 1. Encontrar conversas corrompidas (apenas contact_inbox órfão)
 
 ```sql
 -- Conversas com contact_inbox órfão
@@ -520,22 +645,41 @@ WHERE c.status IN (0, 2)  -- open, pending
 ORDER BY c.created_at DESC;
 ```
 
-### 2. Estatísticas por conta
+### 2. Estatísticas COMPLETAS por conta (recomendado)
 
 ```sql
--- Quantas conversas corrompidas por conta
+-- Quantas conversas corrompidas por conta (TODOS os tipos)
 SELECT
     c.account_id,
     a.name AS account_name,
-    COUNT(c.id) AS corrupted_count
+    COUNT(c.id) AS total_corrupted,
+    -- Contar por tipo
+    COUNT(CASE WHEN c.contact_id IS NOT NULL AND ct.id IS NULL THEN 1 END) AS contact_orphan,
+    COUNT(CASE WHEN c.inbox_id IS NOT NULL AND ib.id IS NULL THEN 1 END) AS inbox_orphan,
+    COUNT(CASE WHEN c.contact_inbox_id IS NOT NULL AND ci.id IS NULL THEN 1 END) AS contact_inbox_orphan,
+    COUNT(CASE WHEN c.assignee_id IS NOT NULL AND u.id IS NULL THEN 1 END) AS assignee_orphan,
+    COUNT(CASE WHEN c.team_id IS NOT NULL AND t.id IS NULL THEN 1 END) AS team_orphan,
+    COUNT(CASE WHEN c.status NOT IN (0, 1, 2, 3) THEN 1 END) AS invalid_status,
+    -- Listar IDs (primeiros 20)
+    array_agg(c.id ORDER BY c.id) FILTER (WHERE c.id IS NOT NULL) AS conversation_ids
 FROM conversations c
+LEFT JOIN contacts ct ON c.contact_id = ct.id
+LEFT JOIN inboxes ib ON c.inbox_id = ib.id
 LEFT JOIN contact_inboxes ci ON c.contact_inbox_id = ci.id
+LEFT JOIN users u ON c.assignee_id = u.id
+LEFT JOIN teams t ON c.team_id = t.id
 LEFT JOIN accounts a ON c.account_id = a.id
-WHERE c.status IN (0, 2)
-  AND c.contact_inbox_id IS NOT NULL
-  AND ci.id IS NULL
+WHERE c.status IN (0, 2)  -- open, pending
+  AND (
+    (c.contact_id IS NOT NULL AND ct.id IS NULL) OR
+    (c.inbox_id IS NOT NULL AND ib.id IS NULL) OR
+    (c.contact_inbox_id IS NOT NULL AND ci.id IS NULL) OR
+    (c.assignee_id IS NOT NULL AND u.id IS NULL) OR
+    (c.team_id IS NOT NULL AND t.id IS NULL) OR
+    c.status NOT IN (0, 1, 2, 3)
+  )
 GROUP BY c.account_id, a.name
-ORDER BY corrupted_count DESC;
+ORDER BY total_corrupted DESC;
 ```
 
 ### 3. Verificar integridade completa
@@ -574,12 +718,44 @@ WHERE c.status IN (0, 2)
 ORDER BY c.created_at DESC;
 ```
 
-### 4. Resolver em massa via SQL
+### 4. Resolver em massa via SQL (TODOS os tipos de corrupção)
 
 ```sql
 -- CUIDADO: Isso modifica dados em produção!
 
--- Resolver conversas corrompidas
+-- Resolver TODAS as conversas corrompidas (todos os tipos)
+UPDATE conversations
+SET status = 1,  -- resolved
+    updated_at = NOW()
+WHERE id IN (
+    SELECT c.id
+    FROM conversations c
+    LEFT JOIN contacts ct ON c.contact_id = ct.id
+    LEFT JOIN inboxes ib ON c.inbox_id = ib.id
+    LEFT JOIN contact_inboxes ci ON c.contact_inbox_id = ci.id
+    LEFT JOIN users u ON c.assignee_id = u.id
+    LEFT JOIN teams t ON c.team_id = t.id
+    WHERE c.status NOT IN (1, 3)  -- NÃO mexer em resolved/snoozed
+      AND (
+        (c.contact_id IS NOT NULL AND ct.id IS NULL) OR
+        (c.inbox_id IS NOT NULL AND ib.id IS NULL) OR
+        (c.contact_inbox_id IS NOT NULL AND ci.id IS NULL) OR
+        (c.assignee_id IS NOT NULL AND u.id IS NULL) OR
+        (c.team_id IS NOT NULL AND t.id IS NULL) OR
+        c.status NOT IN (0, 1, 2, 3)  -- Status inválido
+      )
+);
+
+-- Verificar quantas foram atualizadas
+SELECT 'Updated ' || ROW_COUNT() || ' conversations';
+```
+
+### 4b. Resolver em massa APENAS contact_inbox órfão (legado)
+
+```sql
+-- CUIDADO: Isso modifica dados em produção!
+
+-- Resolver conversas com contact_inbox órfão
 UPDATE conversations
 SET status = 1,  -- resolved
     updated_at = NOW()
@@ -591,9 +767,6 @@ WHERE id IN (
       AND c.contact_inbox_id IS NOT NULL
       AND ci.id IS NULL
 );
-
--- Verificar quantas foram atualizadas
-SELECT 'Updated ' || ROW_COUNT() || ' conversations';
 ```
 
 ### 5. Monitoramento contínuo
@@ -645,6 +818,10 @@ Quando encontrar erro 500 em conversas:
 
 ---
 
-**Última atualização:** 2025-12-18
+**Última atualização:** 2025-12-19
 **Autor:** Equipe Omniflex + Claude
-**Status:** ✅ Documentado e testado
+**Status:** ✅ Documentado, testado e expandido com novos tipos de corrupção
+
+**Changelog:**
+- **2025-12-19:** Expandido para incluir TODOS os tipos de relacionamentos órfãos (contact, inbox, assignee, team) + status inválido
+- **2025-12-18:** Versão inicial focada em contact_inbox órfão
