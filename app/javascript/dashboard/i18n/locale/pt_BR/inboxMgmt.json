@@ -607,61 +607,61 @@
       "BUSINESS_HOURS": "Horário de funcionamento",
       "WIDGET_BUILDER": "Construtor de Widget",
       "BOT_CONFIGURATION": "Configuração do Bot",
-      "ACCOUNT_HEALTH": "Account Health",
+      "ACCOUNT_HEALTH": "Saúde da Conta",
       "CSAT": "CSAT"
     },
     "ACCOUNT_HEALTH": {
-      "TITLE": "Manage your WhatsApp account",
-      "DESCRIPTION": "Review your WhatsApp account status, messaging limits, and quality. Update settings or resolve issues if needed",
-      "GO_TO_SETTINGS": "Go to Meta Business Manager",
-      "NO_DATA": "Health data is not available",
+      "TITLE": "Gerenciar sua conta WhatsApp",
+      "DESCRIPTION": "Revise o status da sua conta WhatsApp, limites de mensagens e qualidade. Atualize configurações ou resolva problemas se necessário",
+      "GO_TO_SETTINGS": "Ir para o Meta Business Manager",
+      "NO_DATA": "Dados de saúde não disponíveis",
       "FIELDS": {
         "DISPLAY_PHONE_NUMBER": {
-          "LABEL": "Display phone number",
-          "TOOLTIP": "Phone number displayed to customers"
+          "LABEL": "Número de telefone",
+          "TOOLTIP": "Número de telefone exibido para os clientes"
         },
         "VERIFIED_NAME": {
-          "LABEL": "Business name",
-          "TOOLTIP": "Business name verified by WhatsApp"
+          "LABEL": "Nome da empresa",
+          "TOOLTIP": "Nome da empresa verificado pelo WhatsApp"
         },
         "DISPLAY_NAME_STATUS": {
-          "LABEL": "Display name status",
-          "TOOLTIP": "Status of your business name verification"
+          "LABEL": "Status do nome de exibição",
+          "TOOLTIP": "Status da verificação do nome da sua empresa"
         },
         "QUALITY_RATING": {
-          "LABEL": "Quality rating",
-          "TOOLTIP": "WhatsApp quality rating for your account"
+          "LABEL": "Classificação de qualidade",
+          "TOOLTIP": "Classificação de qualidade do WhatsApp para sua conta"
         },
         "MESSAGING_LIMIT_TIER": {
-          "LABEL": "Messaging limit tier",
-          "TOOLTIP": "Daily messaging limit for your account"
+          "LABEL": "Nível de limite de mensagens",
+          "TOOLTIP": "Limite diário de mensagens para sua conta"
         },
         "ACCOUNT_MODE": {
-          "LABEL": "Account mode",
-          "TOOLTIP": "Current operating mode of your WhatsApp account"
+          "LABEL": "Modo da conta",
+          "TOOLTIP": "Modo de operação atual da sua conta WhatsApp"
         }
       },
       "VALUES": {
         "TIERS": {
-          "TIER_250": "250 customers per 24h",
-          "TIER_1000": "1K customers per 24h",
-          "TIER_1K": "1K customers per 24h",
-          "TIER_10K": "10K customers per 24h",
-          "TIER_100K": "100K customers per 24h",
-          "TIER_UNLIMITED": "Unlimited customers per 24h",
-          "UNKNOWN": "Rating not available"
+          "TIER_250": "250 clientes por 24h",
+          "TIER_1000": "1K clientes por 24h",
+          "TIER_1K": "1K clientes por 24h",
+          "TIER_10K": "10K clientes por 24h",
+          "TIER_100K": "100K clientes por 24h",
+          "TIER_UNLIMITED": "Clientes ilimitados por 24h",
+          "UNKNOWN": "Classificação não disponível"
         },
         "STATUSES": {
-          "APPROVED": "Aceito",
-          "PENDING_REVIEW": "Pending Review",
-          "AVAILABLE_WITHOUT_REVIEW": "Available Without Review",
-          "REJECTED": "Rejected",
-          "DECLINED": "Declined",
-          "NON_EXISTS": "Non exists"
+          "APPROVED": "Aprovado",
+          "PENDING_REVIEW": "Revisão Pendente",
+          "AVAILABLE_WITHOUT_REVIEW": "Disponível Sem Revisão",
+          "REJECTED": "Rejeitado",
+          "DECLINED": "Recusado",
+          "NON_EXISTS": "Não existe"
         },
         "MODES": {
           "SANDBOX": "Sandbox",
-          "LIVE": "Em tempo real"
+          "LIVE": "Produção"
         }
       }
     },
@@ -736,6 +736,22 @@
       "WHATSAPP_TEMPLATES_SYNC_SUBHEADER": "Sincronize manualmente os modelos de mensagens do WhatsApp para atualizar seus modelos disponíveis.",
       "WHATSAPP_TEMPLATES_SYNC_BUTTON": "Sincronizar Modelos",
       "WHATSAPP_TEMPLATES_SYNC_SUCCESS": "Sincronização de modelos iniciada com sucesso. Pode demorar alguns minutos para atualizar.",
+      "WHATSAPP_WEBHOOK_URL_TITLE": "URL do Webhook",
+      "WHATSAPP_WEBHOOK_URL_SUBHEADER": "Configure esta URL no Portal de Desenvolvedores da Meta como seu endpoint de webhook.",
+      "WHATSAPP_PHONE_NUMBER_ID_TITLE": "ID do Número de Telefone",
+      "WHATSAPP_PHONE_NUMBER_ID_SUBHEADER": "O ID do número de telefone da sua conta WhatsApp Business.",
+      "WHATSAPP_PHONE_NUMBER_ID_PLACEHOLDER": "Digite o ID do Número de Telefone",
+      "WHATSAPP_BUSINESS_ACCOUNT_ID_TITLE": "ID da Conta Business (WABA ID)",
+      "WHATSAPP_BUSINESS_ACCOUNT_ID_SUBHEADER": "O ID da conta WhatsApp Business do Meta Business Manager.",
+      "WHATSAPP_BUSINESS_ACCOUNT_ID_PLACEHOLDER": "Digite o ID da Conta Business",
+      "WHATSAPP_SAVE_CONFIG_TITLE": "Salvar Configuração",
+      "WHATSAPP_SAVE_CONFIG_SUBHEADER": "Salvar todas as alterações de configuração do WhatsApp Cloud API.",
+      "WHATSAPP_SAVE_CONFIG_BUTTON": "Salvar Configuração",
+      "WHATSAPP_WEBHOOK_SYNC_TITLE": "Sincronizar Webhook com Meta",
+      "WHATSAPP_WEBHOOK_SYNC_SUBHEADER": "Re-registrar a URL do webhook com a Meta. Use isto se você alterou o número de telefone ou configurações do webhook.",
+      "WHATSAPP_WEBHOOK_SYNC_BUTTON": "Sincronizar Webhook",
+      "WHATSAPP_WEBHOOK_SYNC_SUCCESS": "Webhook sincronizado com sucesso com a Meta.",
+      "WHATSAPP_WEBHOOK_SYNC_ERROR": "Falha ao sincronizar webhook com a Meta. Por favor verifique suas credenciais de API.",
       "UPDATE_PRE_CHAT_FORM_SETTINGS": "Atualizar configurações do Formulário Pre Chat"
     },
     "HELP_CENTER": {

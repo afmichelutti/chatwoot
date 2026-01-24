@@ -32,6 +32,10 @@ class Inboxes extends CacheEnabledApiClient {
   syncTemplates(inboxId) {
     return axios.post(`${this.url}/${inboxId}/sync_templates`);
   }
+
+  syncWebhook(inboxId) {
+    return axios.post(`${this.url}/${inboxId}/sync_webhook`);
+  }
 }
 
 export default new Inboxes();

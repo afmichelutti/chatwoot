@@ -332,6 +332,13 @@ export const actions = {
       throw new Error(error);
     }
   },
+  syncWebhook: async (_, inboxId) => {
+    try {
+      await InboxesAPI.syncWebhook(inboxId);
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
 };
 
 export const mutations = {

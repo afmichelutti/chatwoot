@@ -34,6 +34,7 @@ class Channel::Whatsapp < ApplicationRecord
 
   after_create :sync_templates
   before_destroy :teardown_webhooks
+  after_update :sync_webhook_on_phone_number_change, if: :saved_change_to_phone_number?
 
   def name
     'Whatsapp'
@@ -85,5 +86,14 @@ class Channel::Whatsapp < ApplicationRecord
 
   def teardown_webhooks
     Whatsapp::WebhookTeardownService.new(self).perform
+  end
+
+  def sync_webhook_on_phone_number_change
+    return unless provider == 'whatsapp_cloud'
+
+    Rails.logger.info "[WHATSAPP] Phone number changed, syncing webhook..."
+    setup_webhooks
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP] Auto webhook sync failed: #{e.message}"
   end
 end

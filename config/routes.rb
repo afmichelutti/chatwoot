@@ -195,6 +195,7 @@ Rails.application.routes.draw do
             post :set_agent_bot, on: :member
             delete :avatar, on: :member
             post :sync_templates, on: :member
+            post :sync_webhook, on: :member
             get :health, on: :member
           end
           resources :inbox_members, only: [:create, :show], param: :inbox_id do

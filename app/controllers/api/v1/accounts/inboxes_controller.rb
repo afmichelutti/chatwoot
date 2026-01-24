@@ -79,6 +79,16 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
     render status: :internal_server_error, json: { error: e.message }
   end
 
+  def sync_webhook
+    return render status: :unprocessable_entity, json: { error: 'Webhook sync is only available for WhatsApp Cloud channels' } unless whatsapp_cloud_channel?
+
+    @inbox.channel.setup_webhooks
+    render status: :ok, json: { message: 'Webhook synced successfully with Meta' }
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP WEBHOOK SYNC] Error: #{e.message}"
+    render status: :internal_server_error, json: { error: e.message }
+  end
+
   def health
     health_data = Whatsapp::HealthService.new(@inbox.channel).fetch_health_status
     render json: health_data
@@ -201,6 +211,10 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
 
   def whatsapp_channel?
     @inbox.whatsapp? || (@inbox.twilio? && @inbox.channel.whatsapp?)
+  end
+
+  def whatsapp_cloud_channel?
+    @inbox.whatsapp? && @inbox.channel.provider == 'whatsapp_cloud'
   end
 
   def trigger_template_sync

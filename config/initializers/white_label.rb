@@ -1,17 +1,21 @@
 # White Label Configuration for Omniflex
 # This file customizes Chatwoot branding to Omniflex
 
-Rails.application.config.to_prepare do
-  # Override default brand name
-  GlobalConfig.class_eval do
-    def self.get(key, default = nil)
-      case key
-      when 'BRAND_NAME'
-        ENV.fetch('CHATWOOT_BRAND_NAME', 'Omniflex')
-      when 'BRAND_URL'
-        ENV.fetch('CHATWOOT_BRAND_URL', 'https://lecard.omniflex.com.br')
-      else
-        super
+Rails.application.config.after_initialize do
+  # Override default brand name by patching the db_fallback method
+  GlobalConfig.instance_eval do
+    class << self
+      alias_method :original_db_fallback, :db_fallback
+
+      def db_fallback(config_key)
+        case config_key
+        when 'BRAND_NAME'
+          ENV.fetch('CHATWOOT_BRAND_NAME', 'Omniflex')
+        when 'BRAND_URL'
+          ENV.fetch('CHATWOOT_BRAND_URL', 'https://lecard.omniflex.com.br')
+        else
+          original_db_fallback(config_key)
+        end
       end
     end
   end

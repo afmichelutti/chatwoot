@@ -36,8 +36,13 @@ export default {
       whatsAppInboxAPIKey: '',
       isRequestingReauthorization: false,
       isSyncingTemplates: false,
+      isSyncingWebhook: false,
+      isUpdatingWhatsAppConfig: false,
       allowedDomains: '',
       isUpdatingAllowedDomains: false,
+      // WhatsApp Cloud API editable fields
+      whatsAppPhoneNumberId: '',
+      whatsAppBusinessAccountId: '',
     };
   },
   validations: {
@@ -49,6 +54,18 @@ export default {
     },
     whatsappAppId() {
       return window.chatwootConfig?.whatsappAppId;
+    },
+    isWhatsAppCloudChannel() {
+      return (
+        this.isAWhatsAppChannel &&
+        !this.isATwilioChannel &&
+        this.inbox.provider === 'whatsapp_cloud'
+      );
+    },
+    whatsappWebhookUrl() {
+      const hostURL = window.chatwootConfig?.hostURL || '';
+      const phoneNumber = this.inbox.phone_number || '';
+      return phoneNumber ? `${hostURL}/webhooks/whatsapp/${phoneNumber}` : '';
     },
   },
   watch: {
@@ -63,6 +80,13 @@ export default {
     setDefaults() {
       this.hmacMandatory = this.inbox.hmac_mandatory || false;
       this.allowedDomains = this.inbox.allowed_domains || '';
+      // WhatsApp Cloud API fields
+      if (this.inbox.provider_config) {
+        this.whatsAppPhoneNumberId =
+          this.inbox.provider_config.phone_number_id || '';
+        this.whatsAppBusinessAccountId =
+          this.inbox.provider_config.business_account_id || '';
+      }
     },
     handleHmacFlag() {
       this.updateInbox();
@@ -139,6 +163,43 @@ export default {
         useAlert(this.$t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
       } finally {
         this.isSyncingTemplates = false;
+      }
+    },
+    async syncWebhook() {
+      this.isSyncingWebhook = true;
+      try {
+        await this.$store.dispatch('inboxes/syncWebhook', this.inbox.id);
+        useAlert(
+          this.$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SYNC_SUCCESS')
+        );
+      } catch (error) {
+        useAlert(
+          this.$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SYNC_ERROR')
+        );
+      } finally {
+        this.isSyncingWebhook = false;
+      }
+    },
+    async updateWhatsAppConfig() {
+      this.isUpdatingWhatsAppConfig = true;
+      try {
+        const payload = {
+          id: this.inbox.id,
+          formData: false,
+          channel: {
+            provider_config: {
+              ...this.inbox.provider_config,
+              phone_number_id: this.whatsAppPhoneNumberId,
+              business_account_id: this.whatsAppBusinessAccountId,
+            },
+          },
+        };
+        await this.$store.dispatch('inboxes/updateInbox', payload);
+        useAlert(this.$t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
+      } catch (error) {
+        useAlert(this.$t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
+      } finally {
+        this.isUpdatingWhatsAppConfig = false;
       }
     },
   },
@@ -338,6 +399,17 @@ export default {
 
       <!-- Manual Setup Section -->
       <template v-else>
+        <!-- Webhook URL (read-only) -->
+        <SettingsSection
+          :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_URL_TITLE')"
+          :sub-title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_URL_SUBHEADER')
+          "
+        >
+          <woot-code :script="whatsappWebhookUrl" />
+        </SettingsSection>
+
+        <!-- Webhook Verify Token (read-only) -->
         <SettingsSection
           :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_TITLE')"
           :sub-title="
@@ -346,6 +418,56 @@ export default {
         >
           <woot-code :script="inbox.provider_config.webhook_verify_token" />
         </SettingsSection>
+
+        <!-- Phone Number ID (editable) -->
+        <SettingsSection
+          :title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_PHONE_NUMBER_ID_TITLE')
+          "
+          :sub-title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_PHONE_NUMBER_ID_SUBHEADER')
+          "
+        >
+          <div class="flex flex-1 items-center mt-2 whatsapp-settings--content">
+            <woot-input
+              v-model="whatsAppPhoneNumberId"
+              type="text"
+              class="flex-1 [&>input]:!mb-0"
+              :placeholder="
+                $t(
+                  'INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_PHONE_NUMBER_ID_PLACEHOLDER'
+                )
+              "
+            />
+          </div>
+        </SettingsSection>
+
+        <!-- Business Account ID (editable) -->
+        <SettingsSection
+          :title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_BUSINESS_ACCOUNT_ID_TITLE')
+          "
+          :sub-title="
+            $t(
+              'INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_BUSINESS_ACCOUNT_ID_SUBHEADER'
+            )
+          "
+        >
+          <div class="flex flex-1 items-center mt-2 whatsapp-settings--content">
+            <woot-input
+              v-model="whatsAppBusinessAccountId"
+              type="text"
+              class="flex-1 [&>input]:!mb-0"
+              :placeholder="
+                $t(
+                  'INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_BUSINESS_ACCOUNT_ID_PLACEHOLDER'
+                )
+              "
+            />
+          </div>
+        </SettingsSection>
+
+        <!-- API Key (read-only) -->
         <SettingsSection
           :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_TITLE')"
           :sub-title="
@@ -354,6 +476,8 @@ export default {
         >
           <woot-code :script="inbox.provider_config.api_key" />
         </SettingsSection>
+
+        <!-- Update API Key -->
         <SettingsSection
           :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_UPDATE_TITLE')"
           :sub-title="
@@ -379,6 +503,45 @@ export default {
             >
               {{
                 $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SECTION_UPDATE_BUTTON')
+              }}
+            </NextButton>
+          </div>
+        </SettingsSection>
+
+        <!-- Save All Configuration Button -->
+        <SettingsSection
+          :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SAVE_CONFIG_TITLE')"
+          :sub-title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SAVE_CONFIG_SUBHEADER')
+          "
+        >
+          <div class="flex justify-start items-center mt-2">
+            <NextButton
+              :is-loading="isUpdatingWhatsAppConfig"
+              @click="updateWhatsAppConfig"
+            >
+              {{
+                $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_SAVE_CONFIG_BUTTON')
+              }}
+            </NextButton>
+          </div>
+        </SettingsSection>
+
+        <!-- Sync Webhook with Meta -->
+        <SettingsSection
+          v-if="isWhatsAppCloudChannel"
+          :title="$t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SYNC_TITLE')"
+          :sub-title="
+            $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SYNC_SUBHEADER')
+          "
+        >
+          <div class="flex justify-start items-center mt-2">
+            <NextButton
+              :is-loading="isSyncingWebhook"
+              @click="syncWebhook"
+            >
+              {{
+                $t('INBOX_MGMT.SETTINGS_POPUP.WHATSAPP_WEBHOOK_SYNC_BUTTON')
               }}
             </NextButton>
           </div>
