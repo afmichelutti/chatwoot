@@ -156,82 +156,82 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| ONBR-01 | — | Pending |
-| ONBR-02 | — | Pending |
-| ONBR-03 | — | Pending |
-| ONBR-04 | — | Pending |
-| WHTS-01 | — | Pending |
-| WHTS-02 | — | Pending |
-| WHTS-03 | — | Pending |
-| WHTS-04 | — | Pending |
-| WHTS-05 | — | Pending |
-| WHTS-06 | — | Pending |
-| WHTS-07 | — | Pending |
-| WHTS-08 | — | Pending |
-| WHTS-09 | — | Pending |
-| INBX-01 | — | Pending |
-| INBX-02 | — | Pending |
-| INBX-03 | — | Pending |
-| INBX-04 | — | Pending |
-| INBX-05 | — | Pending |
-| INBX-06 | — | Pending |
-| INBX-07 | — | Pending |
-| INBX-08 | — | Pending |
-| INBX-09 | — | Pending |
-| INBX-10 | — | Pending |
-| INBX-11 | — | Pending |
-| INBX-12 | — | Pending |
-| CONT-01 | — | Pending |
-| CONT-02 | — | Pending |
-| CONT-03 | — | Pending |
-| CONT-04 | — | Pending |
-| CONT-05 | — | Pending |
-| TEAM-01 | — | Pending |
-| TEAM-02 | — | Pending |
-| TEAM-03 | — | Pending |
-| TEAM-04 | — | Pending |
-| TEAM-05 | — | Pending |
-| TEAM-06 | — | Pending |
-| TEAM-07 | — | Pending |
-| PERM-01 | — | Pending |
-| PERM-02 | — | Pending |
-| PERM-03 | — | Pending |
-| PERM-04 | — | Pending |
-| PERM-05 | — | Pending |
-| WHTL-01 | — | Pending |
-| WHTL-02 | — | Pending |
-| WHTL-03 | — | Pending |
-| WHTL-04 | — | Pending |
-| WHTL-05 | — | Pending |
-| ANLR-01 | — | Pending |
-| ANLR-02 | — | Pending |
-| ANLR-03 | — | Pending |
-| ANLR-04 | — | Pending |
-| ANLR-05 | — | Pending |
-| ANLR-06 | — | Pending |
-| ANLR-07 | — | Pending |
-| ANLR-08 | — | Pending |
-| AUTO-01 | — | Pending |
-| AUTO-02 | — | Pending |
-| AUTO-03 | — | Pending |
-| AUTO-04 | — | Pending |
-| UIUX-01 | — | Pending |
-| UIUX-02 | — | Pending |
-| UIUX-03 | — | Pending |
-| UIUX-04 | — | Pending |
-| UIUX-05 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Pending |
+| UIUX-01 | Phase 1 | Pending |
+| UIUX-02 | Phase 1 | Pending |
+| UIUX-03 | Phase 1 | Pending |
+| UIUX-04 | Phase 1 | Pending |
+| UIUX-05 | Phase 1 | Pending |
+| WHTS-01 | Phase 2 | Pending |
+| WHTS-02 | Phase 2 | Pending |
+| WHTS-03 | Phase 2 | Pending |
+| WHTS-04 | Phase 2 | Pending |
+| WHTS-05 | Phase 2 | Pending |
+| WHTS-06 | Phase 2 | Pending |
+| WHTS-07 | Phase 2 | Pending |
+| WHTS-08 | Phase 2 | Pending |
+| WHTS-09 | Phase 2 | Pending |
+| INBX-01 | Phase 2 | Pending |
+| INBX-02 | Phase 2 | Pending |
+| INBX-03 | Phase 2 | Pending |
+| INBX-04 | Phase 2 | Pending |
+| INBX-05 | Phase 2 | Pending |
+| INBX-12 | Phase 2 | Pending |
+| CONT-05 | Phase 2 | Pending |
+| TEAM-01 | Phase 3 | Pending |
+| TEAM-02 | Phase 3 | Pending |
+| TEAM-03 | Phase 3 | Pending |
+| TEAM-04 | Phase 3 | Pending |
+| TEAM-05 | Phase 3 | Pending |
+| TEAM-06 | Phase 3 | Pending |
+| TEAM-07 | Phase 3 | Pending |
+| PERM-01 | Phase 3 | Pending |
+| PERM-02 | Phase 3 | Pending |
+| PERM-03 | Phase 3 | Pending |
+| PERM-04 | Phase 3 | Pending |
+| PERM-05 | Phase 3 | Pending |
+| ONBR-01 | Phase 3 | Pending |
+| ONBR-02 | Phase 3 | Pending |
+| ONBR-03 | Phase 3 | Pending |
+| ONBR-04 | Phase 3 | Pending |
+| INBX-06 | Phase 3 | Pending |
+| INBX-07 | Phase 3 | Pending |
+| INBX-08 | Phase 3 | Pending |
+| INBX-09 | Phase 3 | Pending |
+| INBX-10 | Phase 3 | Pending |
+| INBX-11 | Phase 3 | Pending |
+| CONT-01 | Phase 3 | Pending |
+| CONT-02 | Phase 3 | Pending |
+| CONT-03 | Phase 3 | Pending |
+| CONT-04 | Phase 3 | Pending |
+| WHTL-01 | Phase 4 | Pending |
+| WHTL-02 | Phase 4 | Pending |
+| WHTL-03 | Phase 4 | Pending |
+| WHTL-04 | Phase 4 | Pending |
+| WHTL-05 | Phase 4 | Pending |
+| ANLR-01 | Phase 4 | Pending |
+| ANLR-02 | Phase 4 | Pending |
+| ANLR-03 | Phase 4 | Pending |
+| ANLR-04 | Phase 4 | Pending |
+| ANLR-05 | Phase 4 | Pending |
+| ANLR-06 | Phase 4 | Pending |
+| ANLR-07 | Phase 4 | Pending |
+| ANLR-08 | Phase 4 | Pending |
+| AUTO-01 | Phase 4 | Pending |
+| AUTO-02 | Phase 4 | Pending |
+| AUTO-03 | Phase 4 | Pending |
+| AUTO-04 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 65 total
-- Mapped to phases: 0
-- Unmapped: 65
+- v1 requirements: 70 total
+- Mapped to phases: 70
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-11*
-*Last updated: 2026-02-11 after architecture pivot (own backend)*
+*Last updated: 2026-02-12 — Roadmap created, 100% requirement coverage*
