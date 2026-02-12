@@ -2,96 +2,88 @@
 
 ## What This Is
 
-ChatWize is a multi-tenant SaaS customer support platform with a fully custom Next.js frontend, powered by Chatwoot's APIs as the backend engine. It offers complete design/UX control, white-label branding per tenant, and advanced features (CRM, dashboards, automations) beyond what Chatwoot provides natively. Each tenant maps to a Chatwoot account within a single shared instance.
+ChatWize is a multi-tenant SaaS customer support platform built from scratch with Next.js (fullstack) and Prisma/PostgreSQL. It provides WhatsApp-focused customer communication (official Cloud API + non-official via Evolution API and Waha), with white-label branding per tenant, agent/team management, conversation routing, permissions, and analytics dashboards. Inspired by Chatwoot's feature set but with own backend — simpler architecture, no external API dependency.
 
 ## Core Value
 
-Businesses can manage all customer conversations across every channel (WhatsApp, email, web chat, social media) through a modern, branded interface — with CRM, analytics and automation capabilities that go beyond basic support.
+Businesses can manage WhatsApp conversations through a modern, branded interface with team collaboration, smart routing, and actionable analytics — all under their own brand.
 
 ## Requirements
 
 ### Validated
 
-<!-- Capabilities available via Chatwoot APIs (backend engine) -->
-
-- ✓ Multi-tenant account management — Chatwoot API
-- ✓ Omnichannel messaging (WhatsApp, Facebook, Instagram, Twitter, Telegram, LINE, Email, SMS, Web Widget) — Chatwoot API
-- ✓ Conversation management (assign, resolve, reopen, labels, teams) — Chatwoot API
-- ✓ Contact management (profiles, merge, search, filter) — Chatwoot API
-- ✓ Team and agent management — Chatwoot API
-- ✓ Canned responses — Chatwoot API
-- ✓ Automation rules — Chatwoot API
-- ✓ Webhooks and integrations — Chatwoot API
-- ✓ Reports and analytics (basic) — Chatwoot API
-- ✓ Real-time updates via WebSocket — Chatwoot ActionCable
-- ✓ WhatsApp Cloud API integration — Chatwoot API
-- ✓ Role-based access control (admin, agent) — Chatwoot API
+(None yet — ship to validate)
 
 ### Active
 
-<!-- New capabilities ChatWize needs to build -->
-
-- [ ] Custom Next.js frontend consuming Chatwoot APIs
-- [ ] Onboarding flow: registration, email verification, WhatsApp connection
+- [ ] Full-stack Next.js application with own Prisma/PostgreSQL backend
+- [ ] Multi-tenant architecture with complete data isolation
+- [ ] Auth system: registration, email verification, login/logout, password reset
+- [ ] WhatsApp integration: Cloud API (official) + Evolution API + Waha API
+- [ ] Conversation inbox with real-time messaging (WebSocket)
+- [ ] Agent and team management with roles and permissions
+- [ ] Conversation routing and transfer between agents/teams
+- [ ] Permission-based conversation visibility (who can see what)
+- [ ] Contact management (profiles, history, custom fields)
 - [ ] White-label branding per tenant (logo, colors, domain)
-- [ ] WhatsApp non-official integration (Evolution API / Waha API)
-- [ ] CRM advanced: sales pipeline, lead scoring, CRM automations
-- [ ] Custom dashboards and BI (metrics, reports, analytics beyond Chatwoot)
-- [ ] Advanced automation workflows (chatbots, custom flows)
-- [ ] Prisma database for tenant configs, analytics data, and extra features
-- [ ] Multi-tenant auth layer (Next.js ↔ Chatwoot account mapping)
-- [ ] All Chatwoot channels exposed via custom UI
+- [ ] Analytics dashboards with export (CSV/Excel)
+- [ ] Guided onboarding: signup → verify email → connect WhatsApp → create team
+- [ ] Automation rules (auto-assignment, business hours)
+- [ ] Responsive UI (desktop, tablet, mobile)
 
 ### Out of Scope
 
-- Modifying Chatwoot backend source code — we consume APIs only
-- Mobile native app — web-first, mobile later
-- Building own messaging infrastructure — Chatwoot handles message routing
-- Own email/SMS delivery — Chatwoot manages channel connections
+- Chatwoot dependency — fully independent backend, no API proxy
+- Channels beyond WhatsApp in v1 — email, social media, web chat deferred to v2
+- CRM pipeline / lead scoring — deferred to v1.x
+- Advanced workflow builder — deferred to v1.x
+- Mobile native apps — responsive web first
+- AI chatbots — deferred to v1.x
+- Telephony / IVR — not in roadmap
 
 ## Context
 
-**Chatwoot as Backend Engine:**
-- Chatwoot v4.7.0-custom running as single shared instance
-- REST API v1/v2 available at `app/controllers/api/`
-- WebSocket via ActionCable for real-time updates
-- API docs available in `docs/json/`
-- Each tenant = one Chatwoot Account (multi-tenant built-in)
+**Architecture Decision (2026-02-11):**
+Originally planned to use Chatwoot APIs as backend engine. After analysis of pitfalls (auth delegation, WebSocket relay complexity, data sync issues, rate limits, upstream dependency risk), decided to build own backend. The scope is focused (WhatsApp only in v1), and the team has WhatsApp integration experience (Evolution/Waha).
+
+**Chatwoot Codebase (reference only):**
+The Chatwoot codebase at `D:\ivox\chatwoot` serves as reference for feature design and data modeling patterns. Codebase map available at `.planning/codebase/`. We are NOT consuming Chatwoot APIs or modifying its code.
 
 **WhatsApp Strategy:**
-- Official: Via Chatwoot's WhatsApp Cloud API integration
-- Non-official: Via Evolution API or Waha API (additional integration needed)
+- Official: Meta WhatsApp Cloud API (direct integration)
+- Non-official: Evolution API + Waha API (direct integration)
+- All three providers supported from v1
 
-**Tech Stack (New Frontend):**
-- Next.js (React) — SSR/SSG, App Router
-- Prisma — ORM for ChatWize's own database (configs, analytics, CRM data)
-- Chatwoot APIs — all business logic and messaging
-
-**Existing Chatwoot Capabilities (reference):**
-- 12+ messaging channels supported
-- Agent/team/account management
-- Automation rules engine
-- Contact management with custom attributes
-- Reports (conversation, agent, team metrics)
-- Webhook system for external integrations
+**Tech Stack:**
+- Next.js 15 (App Router) — fullstack framework
+- React 19 — UI layer
+- Prisma 6 + PostgreSQL — database ORM and persistence
+- TypeScript (strict) — end-to-end type safety
+- TanStack Query v5 — server state management
+- Socket.io — real-time WebSocket
+- shadcn/ui + Tailwind v4 — design system
+- Auth.js v5 — authentication
+- Zod — validation
 
 ## Constraints
 
-- **Backend**: Chatwoot APIs only — no direct database access to Chatwoot's PostgreSQL
-- **Architecture**: Single Chatwoot instance shared across all tenants
-- **WhatsApp**: Must support both official (Cloud API) and non-official (Evolution/Waha)
-- **Real-time**: Must consume Chatwoot WebSocket for live updates
-- **Auth**: Need own auth layer (Next.js) that maps to Chatwoot user/account tokens
+- **Channel v1**: WhatsApp only (Cloud API + Evolution + Waha)
+- **Backend**: Own Prisma/PostgreSQL — no external API dependencies
+- **Multi-tenant**: Data isolation enforced at Prisma middleware level
+- **Real-time**: Socket.io for live conversation updates
+- **i18n**: Portuguese (pt-BR) primary, i18n infrastructure for future languages
+- **WhatsApp compliance**: Must handle Meta's 2026 WABA policies for official API
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Next.js for frontend | Full control over UX, SSR for performance, React ecosystem | — Pending |
-| Prisma for extra data | Need own DB for configs, analytics, CRM beyond Chatwoot | — Pending |
-| Single Chatwoot instance | Simpler ops, multi-tenant via accounts already built-in | — Pending |
-| Evolution/Waha for non-official WhatsApp | Complement official Cloud API with non-official access | — Pending |
-| All channels in v1 | Leverage all Chatwoot channel APIs from day one | — Pending |
+| Own backend instead of Chatwoot APIs | Simpler architecture, no proxy/relay complexity, full control, no upstream dependency | — Pending |
+| Next.js fullstack | Single framework for frontend + API routes + server actions | — Pending |
+| Prisma + PostgreSQL | Type-safe ORM, multi-tenant middleware, direct queries | — Pending |
+| WhatsApp only in v1 | Focused scope, team has experience, fastest path to market | — Pending |
+| Socket.io for real-time | Direct WebSocket, no ActionCable relay needed | — Pending |
+| Three WhatsApp providers | Cloud API (official) + Evolution + Waha covers all use cases | — Pending |
 
 ---
-*Last updated: 2026-02-11 after initialization*
+*Last updated: 2026-02-11 after architecture pivot (own backend)*
