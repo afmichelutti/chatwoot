@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
-import { useVoiceCallStatus } from 'dashboard/composables/useVoiceCallStatus';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import MessagePreview from './MessagePreview.vue';
@@ -14,6 +13,7 @@ import CardLabels from './conversationCardComponents/CardLabels.vue';
 import PriorityMark from './PriorityMark.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ContextMenu from 'dashboard/components/ui/ContextMenu.vue';
+import VoiceCallStatus from './VoiceCallStatus.vue';
 
 const props = defineProps({
   activeLabel: { type: String, default: '' },
@@ -34,6 +34,7 @@ const emit = defineEmits([
   'contextMenuToggle',
   'assignAgent',
   'assignLabel',
+  'removeLabel',
   'assignTeam',
   'markAsUnread',
   'markAsRead',
@@ -83,15 +84,10 @@ const isInboxNameVisible = computed(() => !activeInbox.value);
 
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
 
-const callStatus = computed(
-  () => props.chat.additional_attributes?.call_status
-);
-const callDirection = computed(
-  () => props.chat.additional_attributes?.call_direction
-);
-
-const { labelKey: voiceLabelKey, listIconColor: voiceIconColor } =
-  useVoiceCallStatus(callStatus, callDirection);
+const voiceCallData = computed(() => ({
+  status: props.chat.additional_attributes?.call_status,
+  direction: props.chat.additional_attributes?.call_direction,
+}));
 
 const inboxId = computed(() => props.chat.inbox_id);
 
@@ -208,7 +204,10 @@ const onAssignAgent = agent => {
 
 const onAssignLabel = label => {
   emit('assignLabel', [label.title], [props.chat.id]);
-  closeContextMenu();
+};
+
+const onRemoveLabel = label => {
+  emit('removeLabel', [label.title], [props.chat.id]);
 };
 
 const onAssignTeam = team => {
@@ -241,9 +240,8 @@ const deleteConversation = () => {
   <div
     class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 border-t-0 border-b-0 border-l-0 border-r-0 border-transparent border-solid cursor-pointer conversation hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group"
     :class="{
-      'active animate-card-select bg-n-alpha-1 dark:bg-n-alpha-3 border-n-weak':
-        isActiveChat,
-      'bg-n-slate-2 dark:bg-n-slate-3': selected,
+      'active animate-card-select bg-n-background border-n-weak': isActiveChat,
+      'bg-n-slate-2': selected,
       'px-0': compact,
       'px-3': !compact,
     }"
@@ -317,20 +315,13 @@ const deleteConversation = () => {
       >
         {{ currentContact.name }}
       </h4>
-      <div
-        v-if="callStatus"
+      <VoiceCallStatus
+        v-if="voiceCallData.status"
         key="voice-status-row"
-        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm overflow-hidden text-ellipsis whitespace-nowrap"
-        :class="messagePreviewClass"
-      >
-        <span
-          class="inline-block -mt-0.5 align-middle text-[16px] i-ph-phone-incoming"
-          :class="[voiceIconColor]"
-        />
-        <span class="mx-1">
-          {{ $t(voiceLabelKey) }}
-        </span>
-      </div>
+        :status="voiceCallData.status"
+        :direction="voiceCallData.direction"
+        :message-preview-class="messagePreviewClass"
+      />
       <MessagePreview
         v-else-if="lastMessageInChat"
         key="message-preview"
@@ -392,11 +383,13 @@ const deleteConversation = () => {
         :priority="chat.priority"
         :chat-id="chat.id"
         :has-unread-messages="hasUnread"
+        :conversation-labels="chat.labels"
         :conversation-url="conversationPath"
         :allowed-options="allowedContextMenuOptions"
         @update-conversation="onUpdateConversation"
         @assign-agent="onAssignAgent"
         @assign-label="onAssignLabel"
+        @remove-label="onRemoveLabel"
         @assign-team="onAssignTeam"
         @mark-as-unread="markAsUnread"
         @mark-as-read="markAsRead"

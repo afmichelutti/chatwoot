@@ -9,13 +9,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Upgrade
 
-- [ ] **UPGR-01**: Fork is upgraded to Chatwoot v4.11.1 via git merge
-- [ ] **UPGR-02**: All merge conflicts are resolved preserving custom modifications
-- [ ] **UPGR-03**: Activity-Based Presence system preserved and functional after merge
+- [x] **UPGR-01**: Fork is upgraded to Chatwoot v4.11.1 via git merge
+- [x] **UPGR-02**: All merge conflicts are resolved preserving custom modifications
+- [x] **UPGR-03**: Activity-Based Presence system preserved and functional after merge
 - [ ] **UPGR-04**: White-label branding customization preserved and functional after merge
 - [ ] **UPGR-05**: WhatsApp Cloud API config management preserved and functional after merge
-- [ ] **UPGR-06**: Corrupted conversation handling preserved and functional after merge
-- [ ] **UPGR-07**: Permission enforcement code reconciled (upstream Pundit authorize vs custom PermissionFilterService)
+- [x] **UPGR-06**: Corrupted conversation handling preserved and functional after merge
+- [x] **UPGR-07**: Permission enforcement code reconciled (upstream Pundit authorize vs custom PermissionFilterService)
 - [ ] **UPGR-08**: All new upstream database migrations run successfully
 - [ ] **UPGR-09**: Application boots correctly with all services (Rails, Sidekiq, Vite)
 - [ ] **UPGR-10**: pt-BR translations preserved and merged with upstream changes
@@ -77,13 +77,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UPGR-01 | Phase 1 | Pending |
-| UPGR-02 | Phase 1 | Pending |
-| UPGR-03 | Phase 1 | Pending |
+| UPGR-01 | Phase 1 | Complete |
+| UPGR-02 | Phase 1 | Complete |
+| UPGR-03 | Phase 1 | Complete |
 | UPGR-04 | Phase 1 | Pending |
 | UPGR-05 | Phase 1 | Pending |
-| UPGR-06 | Phase 1 | Pending |
-| UPGR-07 | Phase 1 | Pending |
+| UPGR-06 | Phase 1 | Complete |
+| UPGR-07 | Phase 1 | Complete |
 | UPGR-08 | Phase 1 | Pending |
 | UPGR-09 | Phase 1 | Pending |
 | UPGR-10 | Phase 1 | Pending |

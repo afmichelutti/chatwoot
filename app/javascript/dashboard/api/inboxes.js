@@ -36,6 +36,16 @@ class Inboxes extends CacheEnabledApiClient {
   syncWebhook(inboxId) {
     return axios.post(`${this.url}/${inboxId}/sync_webhook`);
   }
+
+  createCSATTemplate(inboxId, template) {
+    return axios.post(`${this.url}/${inboxId}/csat_template`, {
+      template,
+    });
+  }
+
+  getCSATTemplateStatus(inboxId) {
+    return axios.get(`${this.url}/${inboxId}/csat_template`);
+  }
 }
 
 export default new Inboxes();

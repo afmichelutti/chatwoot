@@ -26,7 +26,7 @@ class Webhooks::Trigger
       url: @url,
       payload: @payload.to_json,
       headers: { content_type: :json, accept: :json },
-      timeout: 5
+      timeout: webhook_timeout
     )
   end
 
@@ -36,14 +36,19 @@ class Webhooks::Trigger
 
     case @webhook_type
     when :agent_bot_webhook
-      conversation = message.conversation
-      return unless conversation&.pending?
-
-      conversation.open!
-      create_agent_bot_error_activity(conversation)
+      update_conversation_status(message)
     when :api_inbox_webhook
       update_message_status(error)
     end
+  end
+
+  def update_conversation_status(message)
+    conversation = message.conversation
+    return unless conversation&.pending?
+    return if conversation&.account&.keep_pending_on_bot_failure
+
+    conversation.open!
+    create_agent_bot_error_activity(conversation)
   end
 
   def create_agent_bot_error_activity(conversation)
@@ -72,5 +77,12 @@ class Webhooks::Trigger
 
   def message_id
     @payload[:id]
+  end
+
+  def webhook_timeout
+    raw_timeout = GlobalConfig.get_value('WEBHOOK_TIMEOUT')
+    timeout = raw_timeout.presence&.to_i
+
+    timeout&.positive? ? timeout : 5
   end
 end

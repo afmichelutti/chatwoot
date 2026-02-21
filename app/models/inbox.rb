@@ -50,6 +50,7 @@ class Inbox < ApplicationRecord
   include Avatarable
   include OutOfOffisable
   include AccountCacheRevalidator
+  include InboxAgentAvailability
 
   # Not allowing characters:
   validates :name, presence: true
@@ -131,6 +132,10 @@ class Inbox < ApplicationRecord
     channel_type == 'Channel::Instagram'
   end
 
+  def tiktok?
+    channel_type == 'Channel::Tiktok'
+  end
+
   def web_widget?
     channel_type == 'Channel::WebWidget'
   end
@@ -157,6 +162,10 @@ class Inbox < ApplicationRecord
 
   def whatsapp?
     channel_type == 'Channel::Whatsapp'
+  end
+
+  def twilio_whatsapp?
+    channel_type == 'Channel::TwilioSms' && channel.medium == 'whatsapp'
   end
 
   def assignable_agents
@@ -194,6 +203,10 @@ class Inbox < ApplicationRecord
 
   def member_ids_with_assignment_capacity
     members.ids
+  end
+
+  def auto_assignment_v2_enabled?
+    account.feature_enabled?('assignment_v2')
   end
 
   private

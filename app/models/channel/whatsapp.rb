@@ -34,6 +34,7 @@ class Channel::Whatsapp < ApplicationRecord
 
   after_create :sync_templates
   before_destroy :teardown_webhooks
+  after_commit :setup_webhooks, on: :create, if: :should_auto_setup_webhooks?
   after_update :sync_webhook_on_phone_number_change, if: :saved_change_to_phone_number?
 
   def name
@@ -86,6 +87,12 @@ class Channel::Whatsapp < ApplicationRecord
 
   def teardown_webhooks
     Whatsapp::WebhookTeardownService.new(self).perform
+  end
+
+  def should_auto_setup_webhooks?
+    # Only auto-setup webhooks for whatsapp_cloud provider with manual setup
+    # Embedded signup calls setup_webhooks explicitly in EmbeddedSignupService
+    provider == 'whatsapp_cloud' && provider_config['source'] != 'embedded_signup'
   end
 
   def sync_webhook_on_phone_number_change
