@@ -70,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Merge | 1/3 | In Progress|  |
+| 1. Merge | 2/3 | In Progress|  |
 | 2. Security Audit | 0/TBD | Not started | - |
 | 3. Testing | 0/TBD | Not started | - |
