@@ -2,17 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-11)
+See: .planning/PROJECT.md (updated 2026-02-21)
 
-**Core value:** Businesses can manage WhatsApp conversations through a modern, branded interface with team collaboration, smart routing, and actionable analytics — all under their own brand.
-**Current focus:** Phase 1 - Foundation & Core Data
+**Core value:** Agents can only access conversations they are authorized to see, with no data leakage through any interface.
+**Current focus:** Milestone v4.11.1 Upgrade & Security Audit
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation & Core Data)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-12 — Roadmap created with 4 phases covering all 70 v1 requirements
+Phase: Not started (defining requirements)
+Plan: --
+Status: Defining requirements
+Last activity: 2026-02-21 — Milestone v4.11.1 Upgrade & Security Audit started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -29,24 +29,14 @@ Progress: [░░░░░░░░░░] 0%
 |-------|-------|-------|----------|
 | - | - | - | - |
 
-**Recent Trend:**
-- Last 5 plans: -
-- Trend: -
-
 *Updated after each plan completion*
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Architecture Pivot (2026-02-11): Own backend instead of Chatwoot APIs — simpler architecture, no proxy/relay complexity, full control, no upstream dependency
-- Next.js Fullstack (2026-02-11): Single framework for frontend + API routes + server actions
-- Prisma + PostgreSQL (2026-02-11): Type-safe ORM, multi-tenant middleware, direct queries
-- WhatsApp Only in v1 (2026-02-11): Focused scope, team has experience, fastest path to market
-- Socket.io for Real-time (2026-02-11): Direct WebSocket, no ActionCable relay needed
+- Merge strategy (2026-02-21): Git merge v4.11.1, not rebase — safer with 324 upstream commits
+- Replace ChatWize planning (2026-02-21): ChatWize project deferred, .planning/ now for Chatwoot fork maintenance
 
 ### Pending Todos
 
@@ -54,10 +44,12 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+- Merge conflicts expected in conversations_controller.rb (both upstream and custom modified)
+- Permission approach divergence: upstream uses Pundit authorize, custom uses PermissionFilterService
+- Contact tab conversation history vulnerability may not be covered by upstream fix
 
 ## Session Continuity
 
-Last session: 2026-02-12 (roadmap creation)
-Stopped at: Roadmap and State files created, ready to plan Phase 1
+Last session: 2026-02-21 (milestone initialization)
+Stopped at: Requirements definition
 Resume file: None

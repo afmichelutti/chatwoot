@@ -1,89 +1,92 @@
-# ChatWize
+# Chatwoot Fork — ivox
 
 ## What This Is
 
-ChatWize is a multi-tenant SaaS customer support platform built from scratch with Next.js (fullstack) and Prisma/PostgreSQL. It provides WhatsApp-focused customer communication (official Cloud API + non-official via Evolution API and Waha), with white-label branding per tenant, agent/team management, conversation routing, permissions, and analytics dashboards. Inspired by Chatwoot's feature set but with own backend — simpler architecture, no external API dependency.
+A customized fork of Chatwoot (open-source customer support platform) maintained by ivox. The fork is based on v4.7.0 with custom modifications for agent permission enforcement, activity-based presence, white-label branding, WhatsApp Cloud API configuration, and corrupted conversation handling. Used in production for WhatsApp-based customer support operations.
 
 ## Core Value
 
-Businesses can manage WhatsApp conversations through a modern, branded interface with team collaboration, smart routing, and actionable analytics — all under their own brand.
+Agents can only access conversations they are authorized to see, with no data leakage through any interface (contacts, search, filters, direct URL access).
+
+## Current Milestone: v4.11.1 Upgrade & Security Audit
+
+**Goal:** Upgrade fork to latest Chatwoot v4.11.1 and ensure complete agent conversation isolation
+
+**Target features:**
+- Merge upstream v4.11.1 (324 new commits) without losing custom changes
+- Validate and harden agent conversation isolation across all access vectors
+- Resolve merge conflicts, especially in permission-related code
+- Run migrations and verify system stability
 
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- Activity-Based Presence system (custom, v4.7.0-custom)
+- White-label branding customization (custom, v4.7.0-custom)
+- WhatsApp Cloud API config management (custom, v4.7.0-custom)
+- Corrupted conversation handling (custom, v4.7.0-custom)
+- Permission checks on conversation access (custom, v4.7.0-custom)
 
 ### Active
 
-- [ ] Full-stack Next.js application with own Prisma/PostgreSQL backend
-- [ ] Multi-tenant architecture with complete data isolation
-- [ ] Auth system: registration, email verification, login/logout, password reset
-- [ ] WhatsApp integration: Cloud API (official) + Evolution API + Waha API
-- [ ] Conversation inbox with real-time messaging (WebSocket)
-- [ ] Agent and team management with roles and permissions
-- [ ] Conversation routing and transfer between agents/teams
-- [ ] Permission-based conversation visibility (who can see what)
-- [ ] Contact management (profiles, history, custom fields)
-- [ ] White-label branding per tenant (logo, colors, domain)
-- [ ] Analytics dashboards with export (CSV/Excel)
-- [ ] Guided onboarding: signup → verify email → connect WhatsApp → create team
-- [ ] Automation rules (auto-assignment, business hours)
-- [ ] Responsive UI (desktop, tablet, mobile)
+- [ ] Upgrade to Chatwoot v4.11.1 via merge
+- [ ] Preserve all custom modifications through upgrade
+- [ ] Agent conversation isolation — no data leakage via any endpoint
+- [ ] Contact history filtered by agent permissions
+- [ ] Prevent agents from reassigning other agents' conversations
+- [ ] All endpoints enforce permission checks at API level
 
 ### Out of Scope
 
-- Chatwoot dependency — fully independent backend, no API proxy
-- Channels beyond WhatsApp in v1 — email, social media, web chat deferred to v2
-- CRM pipeline / lead scoring — deferred to v1.x
-- Advanced workflow builder — deferred to v1.x
-- Mobile native apps — responsive web first
-- AI chatbots — deferred to v1.x
-- Telephony / IVR — not in roadmap
+- New feature development — this milestone is upgrade + security only
+- ChatWize (Next.js project) — deferred, separate project
+- Channel additions — no new channels in this milestone
+- UI redesign — preserve existing customizations
 
 ## Context
 
-**Architecture Decision (2026-02-11):**
-Originally planned to use Chatwoot APIs as backend engine. After analysis of pitfalls (auth delegation, WebSocket relay complexity, data sync issues, rate limits, upstream dependency risk), decided to build own backend. The scope is focused (WhatsApp only in v1), and the team has WhatsApp integration experience (Evolution/Waha).
+**Fork state (2026-02-21):**
+- Current: `v4.7.0-custom` branch, 13 custom commits on v4.7.0
+- Target: `v4.11.1` (324 commits ahead)
+- Repo: origin=afmichelutti/chatwoot, upstream=chatwoot/chatwoot
+- Strategy: `git merge v4.11.1`
 
-**Chatwoot Codebase (reference only):**
-The Chatwoot codebase at `D:\ivox\chatwoot` serves as reference for feature design and data modeling patterns. Codebase map available at `.planning/codebase/`. We are NOT consuming Chatwoot APIs or modifying its code.
+**Custom commits to preserve:**
+1. `962cccc5a` — Activity-Based Presence system and custom configs
+2. `d237b1f42` — Corrupted conversations fix + permission enforcement
+3. `90584ec15` — White label customization and branding
+4. `7355cf545` — WhatsApp Cloud API config management and i18n
+5. Dev scripts: start-chatwoot.bat, stop-chatwoot.bat, setup-dev.sh
+6. i18n: pt_BR translations for inbox management and general settings
 
-**WhatsApp Strategy:**
-- Official: Meta WhatsApp Cloud API (direct integration)
-- Non-official: Evolution API + Waha API (direct integration)
-- All three providers supported from v1
+**Upstream permission fix (already in v4.11.1):**
+Commit `9898ccee9` changed `authorize @conversation.inbox, :show?` to `authorize @conversation, :show?` in conversations controller. This is a different approach than our custom `PermissionFilterService` — need to evaluate which is more comprehensive.
+
+**Known vulnerability (our discovery):**
+Agents could view ALL conversations via Contacts tab → conversation history, bypassing permission checks. Could also reassign conversations from other agents to themselves. Our custom fix used `PermissionFilterService` but may not cover all vectors.
 
 **Tech Stack:**
-- Next.js 15 (App Router) — fullstack framework
-- React 19 — UI layer
-- Prisma 6 + PostgreSQL — database ORM and persistence
-- TypeScript (strict) — end-to-end type safety
-- TanStack Query v5 — server state management
-- Socket.io — real-time WebSocket
-- shadcn/ui + Tailwind v4 — design system
-- Auth.js v5 — authentication
-- Zod — validation
+- Ruby on Rails 7.x (upgraded to 7.2.2 in upstream)
+- Vue.js 3 (frontend)
+- PostgreSQL
+- Redis + Sidekiq (background jobs)
 
 ## Constraints
 
-- **Channel v1**: WhatsApp only (Cloud API + Evolution + Waha)
-- **Backend**: Own Prisma/PostgreSQL — no external API dependencies
-- **Multi-tenant**: Data isolation enforced at Prisma middleware level
-- **Real-time**: Socket.io for live conversation updates
-- **i18n**: Portuguese (pt-BR) primary, i18n infrastructure for future languages
-- **WhatsApp compliance**: Must handle Meta's 2026 WABA policies for official API
+- **Zero data loss**: All custom modifications must survive the merge
+- **Security first**: Permission audit must cover ALL endpoints, not just conversations controller
+- **Merge strategy**: Git merge (not rebase) — preserves commit history
+- **Testing**: Must verify system boots and core flows work after merge
+- **Backward compatibility**: Existing data/migrations must remain intact
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Own backend instead of Chatwoot APIs | Simpler architecture, no proxy/relay complexity, full control, no upstream dependency | — Pending |
-| Next.js fullstack | Single framework for frontend + API routes + server actions | — Pending |
-| Prisma + PostgreSQL | Type-safe ORM, multi-tenant middleware, direct queries | — Pending |
-| WhatsApp only in v1 | Focused scope, team has experience, fastest path to market | — Pending |
-| Socket.io for real-time | Direct WebSocket, no ActionCable relay needed | — Pending |
-| Three WhatsApp providers | Cloud API (official) + Evolution + Waha covers all use cases | — Pending |
+| Git merge over rebase | 324 upstream commits, merge is safer and preserves history | -- Pending |
+| Evaluate upstream permission fix vs custom PermissionFilterService | Upstream uses Pundit authorize, our fix uses service filter — need to determine which covers more vectors | -- Pending |
+| Security audit scope: all endpoints | Contact history, search, filters, direct URL access — not just conversations controller | -- Pending |
 
 ---
-*Last updated: 2026-02-11 after architecture pivot (own backend)*
+*Last updated: 2026-02-21 after milestone v4.11.1 Upgrade & Security Audit started*
