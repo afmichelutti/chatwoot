@@ -38,7 +38,7 @@ Progress: [██░░░░░░░░] 22%
 
 - Merge strategy (2026-02-21): Git merge v4.11.1, not rebase — safer with 324 upstream commits
 - Replace ChatWize planning (2026-02-21): ChatWize project deferred, .planning/ now for Chatwoot fork maintenance
-- Permission approach (2026-02-21): Keep BOTH — upstream Pundit `authorize @conversation, :show?` AND custom `PermissionFilterService` — they are complementary (Pundit policy check + service-level filtering)
+- Permission approach (2026-02-21, Plan 03 confirmed): Keep BOTH — upstream Pundit `authorize @conversation, :show?` (covers inbox + team access) AND custom `PermissionFilterService` (covers collection filtering for inbox access). Gap identified: PermissionFilterService filters by inbox only while Pundit also allows team-based access — Phase 2 must reconcile this by extending PermissionFilterService to include team access.
 - WhatsApp callbacks (2026-02-21): Keep both `after_commit` (upstream, new record setup) and `after_update` (custom, phone number change sync)
 - schema.rb conflict (2026-02-21): Keep upstream `assignee_agent_bot_id` column AND custom indexes — all compatible
 - Frontend WhatsApp config (2026-02-21): Kept ours (syncWebhook, isWhatsAppCloudChannel, whatsappWebhookUrl) AND upstream (createCSATTemplate, isForwardingEnabled) — both sides additive
@@ -48,12 +48,14 @@ Progress: [██░░░░░░░░] 22%
 
 ### Pending Todos
 
-- Plan 03: Run db:migrate, verify system boots
+- Phase 2: Extend PermissionFilterService to include team-based access (to match Pundit ConversationPolicy coverage)
 
 ### Blockers/Concerns
 
-- [Phase 2] Contact tab conversation history vulnerability may not be covered by upstream fix — needs explicit audit
+- [Phase 2] Contact tab conversation history vulnerability: covered by PermissionFilterService in contacts/conversations_controller.rb — verify during Phase 2 security audit
+- [Phase 2] PermissionFilterService gap: only filters by inbox membership, not team membership — must be extended to match Pundit's team_access? check
 - [Dev env] lint-staged not in PATH — pre-commit hook fails; use --no-verify for merge commits or install lint-staged
+- [Dev env] WSL Ubuntu requires Node.js for ExecJS (rails commands) — installed nodejs 18.19.1 via apt as part of Plan 03
 
 ## Session Continuity
 

@@ -84,9 +84,36 @@ Agents could view ALL conversations via Contacts tab → conversation history, b
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Git merge over rebase | 324 upstream commits, merge is safer and preserves history | -- Pending |
-| Evaluate upstream permission fix vs custom PermissionFilterService | Upstream uses Pundit authorize, our fix uses service filter — need to determine which covers more vectors | -- Pending |
-| Security audit scope: all endpoints | Contact history, search, filters, direct URL access — not just conversations controller | -- Pending |
+| Git merge over rebase | 324 upstream commits, merge is safer and preserves history | Git merge strategy used; merge commit ab9c096bf |
+| Upstream permission fix vs custom PermissionFilterService | Two complementary mechanisms serving different purposes | **Both** — Pundit `authorize @conversation, :show?` + `PermissionFilterService` (see details below) |
+| Security audit scope: all endpoints | Contact history, search, filters, direct URL access — not just conversations controller | Phase 2 will audit all vectors |
+
+### Permission Approach Decision (Plan 03 — 2026-02-21)
+
+**Decision: Keep BOTH upstream Pundit `authorize @conversation, :show?` AND custom `Conversations::PermissionFilterService`**
+
+**Analysis of each approach:**
+
+**Upstream Pundit `authorize @conversation, :show?`** (ConversationPolicy#show?):
+- Checks: `administrator? || agent_bot? || agent_can_view_conversation?`
+- `agent_can_view_conversation?` = `inbox_access? || team_access?`
+- Covers: An agent who is assigned to the conversation's inbox OR team
+- Scope: Applied on single-resource actions (show, update, destroy, toggle_status, etc.)
+- Mechanism: Policy check after conversation is loaded — denies access to the individual record
+
+**Custom `Conversations::PermissionFilterService`**:
+- Filters: `conversations.where(inbox: user.inboxes.where(account_id: account.id))`
+- Note: Only filters by inbox membership — does NOT cover team-only access
+- Scope: Applied on collection endpoints (index via conversation_finder, search, filter) AND as double-check on individual access (check_conversation_permission!)
+- Applied in: `conversations_controller.rb`, `contacts/conversations_controller.rb`, `conversation_finder.rb`, `filter_service.rb`
+- Mechanism: Collection-level scoping — prevents data appearing in lists even if inbox membership check passes
+
+**Why Both:**
+- Defense-in-depth: If Pundit fails, PermissionFilterService blocks collection access. If PermissionFilterService is too restrictive (team-only members), Pundit allows their individual access.
+- Different coverage: Pundit covers team-based access (team_access?), PermissionFilterService covers only inbox-based access — they cover different authentication axes
+- Phase 2 Security Audit will reconcile the gap: PermissionFilterService should be extended to also check team access to match Pundit's coverage
+
+**Recommended Phase 2 action:** Update `PermissionFilterService#accessible_conversations` to include team-based access: `conversations.where(inbox: user.inboxes...).or(conversations.where(team: user.teams...))` — then both mechanisms will have consistent coverage.
 
 ---
-*Last updated: 2026-02-21 after milestone v4.11.1 Upgrade & Security Audit started*
+*Last updated: 2026-02-21 — Plan 03 permission decision recorded*
