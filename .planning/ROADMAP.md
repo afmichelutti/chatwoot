@@ -31,9 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Execute git merge v4.11.1 and resolve backend/config conflicts
-- [ ] 01-02-PLAN.md -- Resolve frontend/branding conflicts and finalize merge commit
-- [ ] 01-03-PLAN.md -- Run migrations, verify boot, and record permission approach decision
+- [x] 01-01-PLAN.md -- Execute git merge v4.11.1 and resolve backend/config conflicts
+- [x] 01-02-PLAN.md -- Resolve frontend/branding conflicts and finalize merge commit
+- [x] 01-03-PLAN.md -- Run migrations, verify boot, and record permission approach decision
 
 ### Phase 2: Security Audit
 **Goal**: No agent can access any conversation they are not authorized to see, through any endpoint or interface

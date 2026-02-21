@@ -38,7 +38,7 @@ requirements:
   - UPGR-11
 metrics:
   duration_minutes: 45
-  tasks_completed: 2
+  tasks_completed: 3
   files_modified: 3
   completed_date: "2026-02-21"
 ---
@@ -52,7 +52,7 @@ metrics:
 - **Duration:** ~45 min
 - **Started:** 2026-02-21
 - **Completed:** 2026-02-21
-- **Tasks completed:** 2 of 3 (Task 3 is checkpoint:human-verify — awaiting user)
+- **Tasks completed:** 3 of 3 (Task 3 human-verify approved by user 2026-02-21)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -105,7 +105,7 @@ Analyzed merged conversations_controller.rb, ConversationPolicy, and PermissionF
 |------|--------|-------|-------|
 | Task 1: Migrations and boot | `42eb83189` | `db/schema.rb` | 15 upstream migrations applied, all 0 down |
 | Task 2: Permission decision | `3971362b4` | `.planning/PROJECT.md`, `.planning/STATE.md` | Both approaches documented with gap analysis |
-| Task 3: Human verify | (checkpoint) | — | Awaiting user verification |
+| Task 3: Human verify | N/A | — | Approved by user: branding, presence toggle, WhatsApp config, green colors all confirmed |
 
 ## Files Created/Modified
 
@@ -169,21 +169,21 @@ end
 
 ## User Setup Required
 
-Task 3 (checkpoint:human-verify) requires the user to:
-1. Start the application (`start-chatwoot.bat`)
-2. Open http://localhost:3000 in browser
-3. Verify login page shows custom branding
-4. Confirm Activity-Based Presence toggle visible in Settings
-5. Confirm WhatsApp Cloud API config visible
-6. Check browser console for JavaScript errors
+None — no external service configuration required. Application verified running by user.
 
 ## Next Phase Readiness
 
-- Migrations: complete and verified
-- Rails boot: confirmed working
-- Vite build: confirmed working
-- Permission approach: documented and ready for Phase 2 Security Audit
-- Remaining: human verification (Task 3 checkpoint)
+Phase 1 (Merge) is fully complete — all 3 plans executed and verified:
+- Migrations: complete and verified (all 15 upstream + 2 custom = 0 down)
+- Rails boot: confirmed working (Rails 7.1.5.2)
+- Vite build: confirmed working (exit 0, 63 seconds)
+- Permission approach: documented, ready for Phase 2 Security Audit
+- Human verification: approved — custom branding, Activity-Based Presence toggle, WhatsApp Cloud API config, green brand colors all confirmed working
+
+**Phase 2 Security Audit prerequisites ready:**
+- Permission approach: Pundit + PermissionFilterService (complementary)
+- Gap identified: PermissionFilterService must be extended to include team membership (not just inbox membership)
+- Contact tab conversation history vulnerability documented for Phase 2 audit
 
 ## Self-Check
 
@@ -200,5 +200,12 @@ Task 3 (checkpoint:human-verify) requires the user to:
 - [x] All migrations "up" (0 down)
 - [x] Custom migrations 20250118000000 and 20250118000001 confirmed up
 - [x] Schema version 2026_01_30_061021
+
+### Human verification (Task 3):
+- [x] Application boots with custom ivox branding — confirmed by user
+- [x] Activity-Based Presence toggle visible in Settings — confirmed by user
+- [x] WhatsApp Cloud API configuration visible — confirmed by user
+- [x] Custom green brand colors present — confirmed by user
+- [x] No issues reported by user
 
 ## Self-Check: PASSED

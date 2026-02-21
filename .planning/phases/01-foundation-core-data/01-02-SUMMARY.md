@@ -132,6 +132,20 @@ None — no external service configuration required.
 - System boot verification needed (Plan 03)
 - Backup branch `v4.7.0-custom-backup` still available at `6aba85c83`
 
+## Self-Check: PASSED
+
+- [x] `app/javascript/dashboard/api/inboxes.js` — no conflict markers; syncWebhook + createCSATTemplate + getCSATTemplateStatus all present
+- [x] `app/javascript/dashboard/store/modules/inboxes.js` — no conflict markers; syncWebhook action + CSAT actions all present
+- [x] `app/javascript/dashboard/routes/dashboard/settings/inbox/settingsPage/ConfigurationPage.vue` — no conflict markers; isWhatsAppCloudChannel + isForwardingEnabled both present
+- [x] `app/javascript/dashboard/i18n/locale/pt_BR/inboxMgmt.json` — no conflict markers (verified with grep)
+- [x] `public/brand-assets/logo.svg` — custom ivox CorelDRAW logo preserved
+- [x] `public/brand-assets/logo_dark.svg` — custom ivox dark logo preserved
+- [x] `theme/colors.js` — no conflict markers; both custom green tokens and new upstream tokens present
+- [x] Merge commit `ab9c096bf` exists in git log
+- [x] `v4.7.0-custom-backup` branch still exists at `6aba85c83`
+- [x] `git diff --name-only --diff-filter=U` returns empty (no unresolved conflicts)
+- [x] Metadata commit `c726f9e2a` created with SUMMARY.md, STATE.md, ROADMAP.md, REQUIREMENTS.md
+
 ---
 *Phase: 01-foundation-core-data*
 *Completed: 2026-02-21*
