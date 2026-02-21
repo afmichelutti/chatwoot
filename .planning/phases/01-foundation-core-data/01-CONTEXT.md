@@ -1,85 +1,74 @@
 # Phase 1: Foundation & Core Data - Context
 
-**Gathered:** 2026-02-12
+**Gathered:** 2026-02-21
 **Status:** Ready for planning
+
+> **NOTE:** This context document was updated on 2026-02-21 to reflect the actual Phase 1 scope:
+> upgrading the Chatwoot fork from v4.7.0-custom to v4.11.1 via git merge.
+> The previous content (SaaS multi-tenant build with auth/sidebar/theming) was from a prior
+> project scope and does not apply to this phase.
 
 <domain>
 ## Phase Boundary
 
-Auth system (registration, email verification, login, logout, password reset), multi-tenant architecture with complete data isolation, and UI framework (responsive, light/dark mode, pt-BR). This phase delivers the authenticated app shell — no messaging, no inbox, no contacts management.
+Git merge of upstream Chatwoot v4.11.1 into the v4.7.0-custom fork branch. Resolve all 11 merge conflicts preserving custom modifications (Activity-Based Presence, WhatsApp Cloud API config, white-label branding, corrupted conversation handling, pt-BR translations, dev scripts). Run database migrations, verify application boots, and document the permission approach decision (upstream Pundit authorize vs custom PermissionFilterService). This phase delivers a fully merged, bootable codebase -- no new features, no security hardening (that is Phase 2).
 
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Auth Pages & Flow
-- Layout das páginas de auth: Claude's discretion (escolher melhor layout)
-- Login somente com email/senha — sem login social na v1
-- Verificação de email bloqueia acesso — usuário NÃO entra no app até verificar
-- Cadastro inclui criação da organização junto (nome, email, senha + nome da empresa em um passo)
-- Sessão persistente por 30 dias com checkbox "Lembrar de mim"
-- Múltiplas sessões simultâneas permitidas, sem limite de dispositivos
-- Emails de verificação e reset de senha já com branding do tenant (logo/cores)
-- Reset de senha via link por email (clássico: recebe link, clica, define nova senha)
+### Merge Strategy
+- Git merge (not rebase) of v4.11.1 tag into v4.7.0-custom branch
+- Create backup branch (v4.7.0-custom-backup) before merge for safety
+- Resolve conflicts in two waves: backend/config first, then frontend/branding
+- Use `--no-commit` to allow conflict resolution before finalizing
 
-### Modelo de Tenant
-- URL sem identificador de tenant — tenant resolvido pelo usuário logado
-- Usuário pode pertencer a múltiplas organizações
-- Alternância entre orgs via dropdown no header (estilo Slack/Notion)
-- Isolamento de dados row-level com tenant_id em todas as tabelas — Prisma middleware filtra automaticamente
-- Qualquer pessoa pode se cadastrar e criar uma organização (self-service)
-- Para entrar em organização existente: somente por convite do admin do tenant
-- Super-admin da plataforma existe — acesso a todos os tenants, painel administrativo global
-- Sem limite de usuários por organização na v1
-- Ownership da org: Claude's discretion (transferível ou fixo)
+### Conflict Resolution Approach
+- conversations_controller.rb: Keep BOTH upstream authorize fix AND custom PermissionFilterService (complementary)
+- channel/whatsapp.rb: Accept upstream, merge custom Cloud API config methods on top
+- schedule.yml: Accept upstream, preserve custom presence jobs
+- db/schema.rb: Accept upstream entirely (custom migrations re-run separately)
+- Frontend WhatsApp files: Accept upstream, preserve custom additions
+- Branding files (logos, colors): Keep ours (custom white-label is the point)
+- pt-BR translations: Accept upstream structure, overlay our translations
 
-### Shell da UI & Navegação
-- Sidebar colapsável (recolhe para só ícones — estilo Linear/Notion)
-- Sidebar Fase 1 mínima: Dashboard (vazio), Configurações da Org, Perfil do Usuário
-- Header: Claude's discretion (dropdown de org + avatar com menu no mínimo)
-- Mobile: Claude's discretion (drawer hamburger ou bottom tab bar)
-- Página de configurações da org: Claude's discretion (dados essenciais + lista de membros)
-- Perfil do usuário completo: nome, avatar, senha, email, preferências de notificação, idioma
-- Breadcrumbs: Claude's discretion
-- Loading states: skeleton screens animados
+### Permission Approach
+- Decision deferred to Plan 03 Task 2 for formal evaluation
+- Likely outcome: keep both Pundit authorize + PermissionFilterService (defense in depth)
+- Phase 2 (Security Audit) will unify the pattern
 
-### Tema & Identidade Visual
-- Cor primária: verde (WhatsApp vibe, comunicação, crescimento)
-- Modo padrão: segue preferência do SO, com toggle Sistema / Light / Dark
-- Densidade: compacta — pouco espaçamento, mais informação na tela (estilo Linear/produtividade)
-- Tipografia: seguir melhores práticas das skills de design (frontend-design, web-design-guidelines)
+### Auto-Merged File Verification
+- conversation.rb and message.rb: Verify corrupted conversation handling survived auto-merge
+- account.rb and user.rb: Verify Activity-Based Presence code survived auto-merge
+- These files are not in the conflict list but contain critical custom code
 
 ### Claude's Discretion
-- Layout das páginas de auth (split, centralizado, etc.)
-- Composição do header do app
-- Navegação mobile (drawer vs bottom tab)
-- Escopo das configurações da org na Fase 1
-- Breadcrumbs (sim/não baseado na profundidade de navegação)
-- Política de ownership de org (transferível ou fixo)
-- Tipografia seguindo melhores práticas de design
+- Order of conflict resolution within each wave
+- Whether to use `git checkout --ours` vs manual editing per conflict file
+- How to handle unexpected merge artifacts in auto-merged files
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-- Sidebar colapsável tipo Linear — limpa quando recolhida, informativa quando expandida
-- Verde como cor primária combina com foco em WhatsApp
-- Compacto como o Linear — app de produtividade, agentes precisam ver muita info
-- Emails transacionais já com branding do tenant desde o início (não esperar Fase 4)
-- Super-admin com visão global de todos os tenants
+- Merge commit message should document all 11 conflict resolutions for traceability
+- Backup branch enables easy rollback if post-merge issues discovered
+- Separate plans for backend vs frontend conflicts keeps each plan focused
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+- Security hardening of permission system (Phase 2)
+- New feature development (out of scope for this milestone)
+- Frontend permission enforcement in UI (out of scope)
 
 </deferred>
 
 ---
 
 *Phase: 01-foundation-core-data*
-*Context gathered: 2026-02-12*
+*Context gathered: 2026-02-21 (replaced stale context from prior project scope)*
