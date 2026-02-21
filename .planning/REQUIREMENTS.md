@@ -16,10 +16,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **UPGR-05**: WhatsApp Cloud API config management preserved and functional after merge
 - [x] **UPGR-06**: Corrupted conversation handling preserved and functional after merge
 - [x] **UPGR-07**: Permission enforcement code reconciled (upstream Pundit authorize vs custom PermissionFilterService)
-- [ ] **UPGR-08**: All new upstream database migrations run successfully
-- [ ] **UPGR-09**: Application boots correctly with all services (Rails, Sidekiq, Vite)
+- [x] **UPGR-08**: All new upstream database migrations run successfully
+- [x] **UPGR-09**: Application boots correctly with all services (Rails, Sidekiq, Vite)
 - [x] **UPGR-10**: pt-BR translations preserved and merged with upstream changes
-- [ ] **UPGR-11**: Dev scripts (start/stop .bat, setup-dev.sh) still functional
+- [x] **UPGR-11**: Dev scripts (start/stop .bat, setup-dev.sh) still functional
 
 ### Security — Conversation Isolation
 
@@ -84,10 +84,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UPGR-05 | Phase 1 | Complete |
 | UPGR-06 | Phase 1 | Complete |
 | UPGR-07 | Phase 1 | Complete |
-| UPGR-08 | Phase 1 | Pending |
-| UPGR-09 | Phase 1 | Pending |
+| UPGR-08 | Phase 1 | Complete |
+| UPGR-09 | Phase 1 | Complete |
 | UPGR-10 | Phase 1 | Complete |
-| UPGR-11 | Phase 1 | Pending |
+| UPGR-11 | Phase 1 | Complete |
 | SECR-01 | Phase 2 | Pending |
 | SECR-02 | Phase 2 | Pending |
 | SECR-03 | Phase 2 | Pending |

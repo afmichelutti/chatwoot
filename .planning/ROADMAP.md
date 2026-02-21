@@ -12,7 +12,7 @@ Upgrade the ivox Chatwoot fork from v4.7.0-custom to v4.11.1 without losing cust
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Merge** - Integrate upstream v4.11.1 and resolve all conflicts while preserving custom modifications
+- [x] **Phase 1: Merge** - Integrate upstream v4.11.1 and resolve all conflicts while preserving custom modifications (completed 2026-02-21)
 - [ ] **Phase 2: Security Audit** - Audit and harden agent conversation isolation across all API access vectors
 - [ ] **Phase 3: Testing** - Write and run RSpec tests that verify permission boundaries for all roles
 
@@ -70,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Merge | 2/3 | In Progress|  |
+| 1. Merge | 3/3 | Complete   | 2026-02-21 |
 | 2. Security Audit | 0/TBD | Not started | - |
 | 3. Testing | 0/TBD | Not started | - |

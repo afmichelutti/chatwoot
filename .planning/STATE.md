@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 ## Current Position
 
 Phase: 1 of 3 (Merge)
-Plan: 2 of 3 in current phase (Plan 02 complete)
-Status: In progress — merge commit finalized; Plan 03 (migrations + boot verify) next
-Last activity: 2026-02-21 — Plan 01-02 executed: 7 frontend/branding conflicts resolved, merge commit ab9c096bf created
+Plan: 3 of 3 in current phase (Plan 03 at checkpoint — human-verify Task 3 pending)
+Status: At checkpoint — Tasks 1-2 complete; awaiting human verification of application boot
+Last activity: 2026-02-21 — Plan 01-03 Tasks 1-2 executed: migrations applied, Rails boots, Vite builds, permission decision documented
 
-Progress: [██░░░░░░░░] 22%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
@@ -31,6 +31,7 @@ Progress: [██░░░░░░░░] 22%
 
 *Updated after each plan completion*
 | Phase 01 P02 | 15 | 2 tasks | 7 files |
+| Phase 01 P03 | 45 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -45,6 +46,8 @@ Progress: [██░░░░░░░░] 22%
 - Branding (2026-02-21): Always keep ours over upstream for logos — white-label is core requirement
 - colors.js (2026-02-21): Keep our brand color values (border-green, text-green) AND add all new upstream color tokens
 - pt-BR translations (2026-02-21): Our wording preferred over upstream for conflicting keys; accept upstream additions
+- [Phase 01]: Permission approach (Plan 03 final): Both Pundit authorize @conversation,show? + PermissionFilterService active; gap: PermissionFilterService only checks inbox access not team access - Phase 2 must fix
+- [Phase 01]: Node.js 18.19.1 installed in WSL Ubuntu via apt-get to satisfy ExecJS runtime requirement for Rails commands
 
 ### Pending Todos
 
@@ -59,6 +62,6 @@ Progress: [██░░░░░░░░] 22%
 
 ## Session Continuity
 
-Last session: 2026-02-21 (Plan 01-02 execution)
-Stopped at: Completed 01-02-PLAN.md — merge commit ab9c096bf created, all 11 conflicts resolved
+Last session: 2026-02-21 (Plan 01-03 execution)
+Stopped at: Plan 01-03 checkpoint:human-verify (Task 3) — Tasks 1+2 complete, awaiting user to verify application boots with custom branding
 Resume file: None
