@@ -28,10 +28,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All upstream database migrations run to completion with no errors
   4. Activity-Based Presence, white-label branding, WhatsApp Cloud API config, and corrupted conversation handling all behave as they did before the merge
   5. A decision is recorded in PROJECT.md resolving whether to use the upstream Pundit `authorize @conversation, :show?` or the custom `PermissionFilterService`, with rationale
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: [To be planned]
+- [ ] 01-01-PLAN.md -- Execute git merge v4.11.1 and resolve backend/config conflicts
+- [ ] 01-02-PLAN.md -- Resolve frontend/branding conflicts and finalize merge commit
+- [ ] 01-03-PLAN.md -- Run migrations, verify boot, and record permission approach decision
 
 ### Phase 2: Security Audit
 **Goal**: No agent can access any conversation they are not authorized to see, through any endpoint or interface
@@ -68,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Merge | 0/TBD | Not started | - |
+| 1. Merge | 0/3 | Planning complete | - |
 | 2. Security Audit | 0/TBD | Not started | - |
 | 3. Testing | 0/TBD | Not started | - |
