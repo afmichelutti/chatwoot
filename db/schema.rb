@@ -70,11 +70,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.integer "status", default: 0
     t.jsonb "internal_attributes", default: {}, null: false
     t.jsonb "settings", default: {}
-    t.boolean "auto_assign_team_on_agent_transfer", default: false, null: false
-    t.boolean "filter_conversations_by_team", default: false, null: false
-    t.boolean "auto_assign_teams_on_transfer", default: false, null: false
+    t.boolean "auto_assign_team_on_agent_transfer", default: false, null: false, comment: "Automatically assign team when agent transfers conversation"
+    t.boolean "filter_conversations_by_team", default: false, null: false, comment: "Filter conversations based on team membership"
+    t.boolean "auto_assign_teams_on_transfer", default: false, null: false, comment: "Automatically assign teams when transferring conversations"
     t.boolean "activity_based_presence_enabled", default: false, null: false
     t.jsonb "activity_based_presence_config", default: {"busy_timeout_hours" => 3, "inactivity_timeout_minutes" => 10}, null: false
+    t.index ["auto_assign_team_on_agent_transfer"], name: "idx_accounts_auto_assign_team_on_agent_transfer", where: "(auto_assign_team_on_agent_transfer = true)"
+    t.index ["auto_assign_teams_on_transfer"], name: "idx_accounts_auto_assign_teams_on_transfer", where: "(auto_assign_teams_on_transfer = true)"
+    t.index ["filter_conversations_by_team"], name: "idx_accounts_filter_conversations_by_team", where: "(filter_conversations_by_team = true)"
     t.index ["status"], name: "index_accounts_on_status"
   end
 
@@ -418,8 +421,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["waba_template_status"], name: "idx_cadence_templates_waba_status"
     t.index ["whatsapp_config_id", "waba_template_status", "template_language"], name: "idx_cadence_templates_approved", where: "((waba_template_status)::text = 'APPROVED'::text)"
     t.index ["whatsapp_config_id"], name: "idx_cadence_templates_whatsapp_config"
-    t.check_constraint "template_category::text = ANY (ARRAY['MARKETING'::character varying::text, 'UTILITY'::character varying::text, 'AUTHENTICATION'::character varying::text])", name: "chk_template_category"
-    t.check_constraint "waba_template_status::text = ANY (ARRAY['PENDING'::character varying::text, 'APPROVED'::character varying::text, 'REJECTED'::character varying::text, 'PAUSED'::character varying::text, 'DISABLED'::character varying::text, 'ERROR'::character varying::text])", name: "chk_waba_template_status"
+    t.check_constraint "template_category::text = ANY (ARRAY['MARKETING'::character varying, 'UTILITY'::character varying, 'AUTHENTICATION'::character varying]::text[])", name: "chk_template_category"
+    t.check_constraint "waba_template_status::text = ANY (ARRAY['PENDING'::character varying, 'APPROVED'::character varying, 'REJECTED'::character varying, 'PAUSED'::character varying, 'DISABLED'::character varying, 'ERROR'::character varying]::text[])", name: "chk_waba_template_status"
   end
 
   create_table "campaigns", force: :cascade do |t|
@@ -770,7 +773,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "contacts_count"
+    t.integer "contacts_count", default: 0, null: false
     t.index ["account_id", "domain"], name: "index_companies_on_account_and_domain", unique: true, where: "(domain IS NOT NULL)"
     t.index ["account_id"], name: "index_companies_on_account_id"
     t.index ["name", "account_id"], name: "index_companies_on_name_and_account_id"
@@ -1445,7 +1448,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["usage_reset_date"], name: "idx_omni_account_api_keys_usage_reset"
     t.check_constraint "current_usage_usd >= 0::numeric", name: "chk_current_usage_positive"
     t.check_constraint "monthly_limit_usd IS NULL OR monthly_limit_usd >= 0::numeric", name: "chk_monthly_limit_positive"
-    t.check_constraint "provider::text = ANY (ARRAY['openai'::character varying::text, 'anthropic'::character varying::text, 'groq'::character varying::text, 'google'::character varying::text])", name: "chk_provider_valid"
+    t.check_constraint "provider::text = ANY (ARRAY['openai'::character varying, 'anthropic'::character varying, 'groq'::character varying, 'google'::character varying]::text[])", name: "chk_provider_valid"
     t.unique_constraint ["account_id", "provider", "api_key_name"], name: "account_api_keys_account_id_provider_api_key_name_key"
   end
 
@@ -1758,7 +1761,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["sent_at"], name: "idx_omni_campaign_contacts_sent_at"
     t.index ["status"], name: "idx_omni_campaign_contacts_status"
     t.index ["waba_message_id"], name: "idx_omni_campaign_contacts_waba_message_id"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'validating'::character varying::text, 'valid'::character varying::text, 'invalid'::character varying::text, 'queued'::character varying::text, 'sending'::character varying::text, 'sent'::character varying::text, 'delivered'::character varying::text, 'read'::character varying::text, 'failed'::character varying::text, 'blocked'::character varying::text, 'opted_out'::character varying::text, 'skipped'::character varying::text])", name: "omni_campaign_contacts_status_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'validating'::character varying, 'valid'::character varying, 'invalid'::character varying, 'queued'::character varying, 'sending'::character varying, 'sent'::character varying, 'delivered'::character varying, 'read'::character varying, 'failed'::character varying, 'blocked'::character varying, 'opted_out'::character varying, 'skipped'::character varying]::text[])", name: "omni_campaign_contacts_status_check"
   end
 
   create_table "omni_campaign_messages", id: :serial, comment: "Detailed message tracking with Meta API responses", force: :cascade do |t|
@@ -1792,7 +1795,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["message_status"], name: "idx_omni_campaign_messages_status"
     t.index ["sent_at"], name: "idx_omni_campaign_messages_sent_at", order: :desc
     t.index ["waba_message_id"], name: "idx_omni_campaign_messages_waba_message_id"
-    t.check_constraint "message_type::text = ANY (ARRAY['template'::character varying::text, 'text'::character varying::text, 'media'::character varying::text])", name: "omni_campaign_messages_message_type_check"
+    t.check_constraint "message_type::text = ANY (ARRAY['template'::character varying, 'text'::character varying, 'media'::character varying]::text[])", name: "omni_campaign_messages_message_type_check"
   end
 
   create_table "omni_campaign_queue", id: :serial, comment: "Message queue for scheduled and throttled sending", force: :cascade do |t|
@@ -1813,7 +1816,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["campaign_id"], name: "idx_omni_queue_campaign_id"
     t.index ["locked_at"], name: "idx_omni_queue_locked", where: "(locked_at IS NOT NULL)"
     t.index ["status", "scheduled_for"], name: "idx_omni_queue_status_scheduled", where: "((status)::text = 'pending'::text)"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'processing'::character varying::text, 'completed'::character varying::text, 'failed'::character varying::text])", name: "omni_campaign_queue_status_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'processing'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "omni_campaign_queue_status_check"
   end
 
   create_table "omni_campaign_tags", id: :serial, comment: "Tags associated with campaigns for segmentation", force: :cascade do |t|
@@ -1872,8 +1875,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["scheduled_at"], name: "idx_omni_campaigns_scheduled_at"
     t.index ["status"], name: "idx_omni_campaigns_status"
     t.index ["template_id"], name: "idx_omni_campaigns_template_id"
-    t.check_constraint "source_type::text = ANY (ARRAY['csv'::character varying::text, 'excel'::character varying::text, 'contacts'::character varying::text, 'tags'::character varying::text, 'mixed'::character varying::text])", name: "omni_campaigns_source_type_check"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'scheduled'::character varying::text, 'running'::character varying::text, 'paused'::character varying::text, 'completed'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])", name: "omni_campaigns_status_check"
+    t.check_constraint "source_type::text = ANY (ARRAY['csv'::character varying, 'excel'::character varying, 'contacts'::character varying, 'tags'::character varying, 'mixed'::character varying]::text[])", name: "omni_campaigns_source_type_check"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'scheduled'::character varying, 'running'::character varying, 'paused'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "omni_campaigns_status_check"
   end
 
   create_table "omni_credit_transactions", id: :integer, default: -> { "nextval('credit_transactions_id_seq'::regclass)" }, force: :cascade do |t|
@@ -1897,7 +1900,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["usage_log_id"], name: "idx_omni_credit_transactions_usage_log_id"
     t.check_constraint "balance_before_usd >= 0::numeric AND balance_after_usd >= 0::numeric", name: "chk_balance_positive"
     t.check_constraint "tokens_used IS NULL OR tokens_used >= 0", name: "chk_tokens_positive"
-    t.check_constraint "transaction_type::text = ANY (ARRAY['purchase'::character varying::text, 'usage'::character varying::text, 'refund'::character varying::text, 'bonus'::character varying::text])", name: "chk_transaction_type_valid"
+    t.check_constraint "transaction_type::text = ANY (ARRAY['purchase'::character varying, 'usage'::character varying, 'refund'::character varying, 'bonus'::character varying]::text[])", name: "chk_transaction_type_valid"
   end
 
   create_table "omni_llm_usage_logs", id: :integer, default: -> { "nextval('llm_usage_logs_id_seq'::regclass)" }, force: :cascade do |t|
@@ -1927,8 +1930,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["usage_type"], name: "idx_omni_llm_usage_logs_usage_type"
     t.check_constraint "cost_usd >= 0::numeric", name: "chk_cost_positive"
     t.check_constraint "prompt_tokens >= 0 AND completion_tokens >= 0 AND total_tokens >= 0", name: "chk_tokens_positive"
-    t.check_constraint "provider::text = ANY (ARRAY['openai'::character varying::text, 'anthropic'::character varying::text, 'groq'::character varying::text, 'google'::character varying::text])", name: "chk_provider_valid"
-    t.check_constraint "usage_type::text = ANY (ARRAY['own_key'::character varying::text, 'platform_credits'::character varying::text])", name: "chk_usage_type_valid"
+    t.check_constraint "provider::text = ANY (ARRAY['openai'::character varying, 'anthropic'::character varying, 'groq'::character varying, 'google'::character varying]::text[])", name: "chk_provider_valid"
+    t.check_constraint "usage_type::text = ANY (ARRAY['own_key'::character varying, 'platform_credits'::character varying]::text[])", name: "chk_usage_type_valid"
   end
 
   create_table "omni_whatsapp_agent_mapping", force: :cascade do |t|
@@ -2207,13 +2210,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.datetime "completed_at", precision: nil
     t.index ["cadence_template_id", "sync_status", "created_at"], name: "idx_sync_logs_template_status", order: { created_at: :desc }
     t.index ["cadence_template_id"], name: "idx_sync_logs_template"
-    t.index ["created_at"], name: "idx_sync_logs_cleanup", where: "((sync_status)::text = ANY (ARRAY[('success'::character varying)::text, ('error'::character varying)::text]))"
+    t.index ["created_at"], name: "idx_sync_logs_cleanup", where: "((sync_status)::text = ANY ((ARRAY['success'::character varying, 'error'::character varying])::text[]))"
     t.index ["created_at"], name: "idx_sync_logs_created_at"
     t.index ["sync_status"], name: "idx_sync_logs_status"
     t.index ["sync_type"], name: "idx_sync_logs_type"
     t.index ["whatsapp_config_id"], name: "idx_sync_logs_config"
-    t.check_constraint "sync_status::text = ANY (ARRAY['success'::character varying::text, 'error'::character varying::text, 'pending'::character varying::text, 'timeout'::character varying::text])", name: "template_sync_logs_sync_status_check"
-    t.check_constraint "sync_type::text = ANY (ARRAY['create'::character varying::text, 'update'::character varying::text, 'delete'::character varying::text, 'status_check'::character varying::text, 'quality_update'::character varying::text])", name: "template_sync_logs_sync_type_check"
+    t.check_constraint "sync_status::text = ANY (ARRAY['success'::character varying, 'error'::character varying, 'pending'::character varying, 'timeout'::character varying]::text[])", name: "template_sync_logs_sync_status_check"
+    t.check_constraint "sync_type::text = ANY (ARRAY['create'::character varying, 'update'::character varying, 'delete'::character varying, 'status_check'::character varying, 'quality_update'::character varying]::text[])", name: "template_sync_logs_sync_type_check"
   end
 
   create_table "users", id: :serial, force: :cascade do |t|
@@ -2310,7 +2313,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_30_061021) do
     t.index ["updated_by"], name: "idx_whatsapp_configs_updated_by"
     t.index ["verified_name"], name: "idx_whatsapp_configs_verified_name"
     t.index ["waba_id"], name: "idx_whatsapp_configs_waba_id"
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'inactive'::character varying::text, 'error'::character varying::text, 'suspended'::character varying::text])", name: "whatsapp_business_configs_status_check"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'error'::character varying, 'suspended'::character varying]::text[])", name: "whatsapp_business_configs_status_check"
     t.unique_constraint ["account_id", "waba_id"], name: "uk_whatsapp_configs_account_waba"
     t.unique_constraint ["business_phone_number_id"], name: "uk_whatsapp_configs_phone_number"
   end
