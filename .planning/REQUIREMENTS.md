@@ -77,41 +77,41 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UPGR-01 | TBD | Pending |
-| UPGR-02 | TBD | Pending |
-| UPGR-03 | TBD | Pending |
-| UPGR-04 | TBD | Pending |
-| UPGR-05 | TBD | Pending |
-| UPGR-06 | TBD | Pending |
-| UPGR-07 | TBD | Pending |
-| UPGR-08 | TBD | Pending |
-| UPGR-09 | TBD | Pending |
-| UPGR-10 | TBD | Pending |
-| UPGR-11 | TBD | Pending |
-| SECR-01 | TBD | Pending |
-| SECR-02 | TBD | Pending |
-| SECR-03 | TBD | Pending |
-| SECR-04 | TBD | Pending |
-| SECR-05 | TBD | Pending |
-| SECR-06 | TBD | Pending |
-| SECR-07 | TBD | Pending |
-| SECR-08 | TBD | Pending |
-| SECR-09 | TBD | Pending |
-| SECR-10 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| TEST-06 | TBD | Pending |
-| TEST-07 | TBD | Pending |
-| TEST-08 | TBD | Pending |
+| UPGR-01 | Phase 1 | Pending |
+| UPGR-02 | Phase 1 | Pending |
+| UPGR-03 | Phase 1 | Pending |
+| UPGR-04 | Phase 1 | Pending |
+| UPGR-05 | Phase 1 | Pending |
+| UPGR-06 | Phase 1 | Pending |
+| UPGR-07 | Phase 1 | Pending |
+| UPGR-08 | Phase 1 | Pending |
+| UPGR-09 | Phase 1 | Pending |
+| UPGR-10 | Phase 1 | Pending |
+| UPGR-11 | Phase 1 | Pending |
+| SECR-01 | Phase 2 | Pending |
+| SECR-02 | Phase 2 | Pending |
+| SECR-03 | Phase 2 | Pending |
+| SECR-04 | Phase 2 | Pending |
+| SECR-05 | Phase 2 | Pending |
+| SECR-06 | Phase 2 | Pending |
+| SECR-07 | Phase 2 | Pending |
+| SECR-08 | Phase 2 | Pending |
+| SECR-09 | Phase 2 | Pending |
+| SECR-10 | Phase 2 | Pending |
+| TEST-01 | Phase 3 | Pending |
+| TEST-02 | Phase 3 | Pending |
+| TEST-03 | Phase 3 | Pending |
+| TEST-04 | Phase 3 | Pending |
+| TEST-05 | Phase 3 | Pending |
+| TEST-06 | Phase 3 | Pending |
+| TEST-07 | Phase 3 | Pending |
+| TEST-08 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 29 total
-- Mapped to phases: 0
-- Unmapped: 29 (pending roadmap creation)
+- Mapped to phases: 29
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-21*
-*Last updated: 2026-02-21 after initial definition*
+*Last updated: 2026-02-21 after roadmap creation*
