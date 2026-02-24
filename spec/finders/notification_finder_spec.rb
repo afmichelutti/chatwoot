@@ -54,6 +54,55 @@ RSpec.describe NotificationFinder do
         expect(subject.first.last_activity_at).to be < subject.last.last_activity_at
       end
     end
+
+    context 'assignment-based filtering for basic agents' do
+      let(:params) { { includes: %w[read snoozed] } }
+
+      context 'when user is a basic agent (role=agent, no custom_role_id)' do
+        it 'excludes notifications for conversations assigned to other agents' do
+          other_agent = create(:user, account: account)
+          conversation_assigned_to_other = create(:conversation, account: account, assignee: other_agent)
+          create(:notification, account: account, user: user, primary_actor: conversation_assigned_to_other)
+
+          results = notification_finder.notifications
+          result_conversation_ids = results.map { |n| n.primary_actor_id }
+          expect(result_conversation_ids).not_to include(conversation_assigned_to_other.id)
+        end
+
+        it 'includes notifications for conversations assigned to the current user' do
+          conversation_assigned_to_me = create(:conversation, account: account, assignee: user)
+          notif = create(:notification, account: account, user: user, primary_actor: conversation_assigned_to_me)
+
+          results = notification_finder.notifications
+          result_ids = results.map(&:id)
+          expect(result_ids).to include(notif.id)
+        end
+
+        it 'includes notifications for unassigned conversations' do
+          unassigned_conversation = create(:conversation, account: account)
+          notif = create(:notification, account: account, user: user, primary_actor: unassigned_conversation)
+
+          results = notification_finder.notifications
+          result_ids = results.map(&:id)
+          expect(result_ids).to include(notif.id)
+        end
+      end
+
+      context 'when user is an administrator' do
+        let!(:admin_user) { create(:user, account: account, role: :administrator) }
+        let(:notification_finder) { described_class.new(admin_user, account, params) }
+
+        it 'shows notifications for all conversations regardless of assignment' do
+          other_agent = create(:user, account: account)
+          conversation_assigned_to_other = create(:conversation, account: account, assignee: other_agent)
+          notif = create(:notification, account: account, user: admin_user, primary_actor: conversation_assigned_to_other)
+
+          results = notification_finder.notifications
+          result_ids = results.map(&:id)
+          expect(result_ids).to include(notif.id)
+        end
+      end
+    end
   end
 
   describe 'counts' do
