@@ -11,6 +11,17 @@ describe ConversationFinder do
   let!(:contact_inbox) { create(:contact_inbox, inbox: inbox, source_id: 'testing_source_id') }
   let!(:restricted_inbox) { create(:inbox, account: account) }
 
+  # Conversations in before:
+  #   conv1: user_1, open
+  #   conv2: user_1, open
+  #   conv3: user_1, resolved
+  #   conv4: user_2, open, has contact_inbox with source_id (NOT visible to user_1 after security fix)
+  #   conv5: unassigned, open
+  #
+  # With PermissionFilterService security fix, user_1 (basic agent) sees only:
+  #   - their own assigned conversations (conv1, conv2, conv3)
+  #   - unassigned conversations in their inboxes (conv5)
+  #   => open conversations accessible to user_1: conv1, conv2, conv5 (count: 3)
   before do
     create(:inbox_member, user: user_1, inbox: inbox)
     create(:inbox_member, user: user_2, inbox: inbox)
@@ -72,9 +83,11 @@ describe ConversationFinder do
     context 'with assignee_type all' do
       let(:params) { { assignee_type: 'all' } }
 
-      it 'filter conversations by assignee type all' do
+      it 'filter conversations by assignee type all — shows mine and unassigned only for basic agents' do
         result = conversation_finder.perform
-        expect(result[:conversations].length).to be 4
+        # user_1 is a basic agent: can see own (conv1, conv2) + unassigned (conv5) = 3 open
+        # conv4 (assigned to user_2) is NOT visible
+        expect(result[:conversations].length).to be 3
       end
     end
 
@@ -90,27 +103,37 @@ describe ConversationFinder do
     context 'with status all' do
       let(:params) { { status: 'all' } }
 
-      it 'returns all conversations' do
+      it 'returns all conversations visible to the agent (own + unassigned across all statuses)' do
         result = conversation_finder.perform
-        expect(result[:conversations].length).to be 5
+        # user_1 sees: conv1(open), conv2(open), conv3(resolved), conv5(open, unassigned) = 4
+        # conv4 (user_2's) is NOT visible
+        expect(result[:conversations].length).to be 4
       end
     end
 
     context 'with assignee_type assigned' do
       let(:params) { { assignee_type: 'assigned' } }
 
-      it 'filter conversations by assignee type assigned' do
+      it 'filter conversations by assignee type assigned — only own assigned conversations' do
         result = conversation_finder.perform
-        expect(result[:conversations].length).to be 3
+        # PermFilter gives user_1 mine(conv1, conv2, conv3) + unassigned(conv5)
+        # Status filter: open → conv1, conv2, conv5
+        # assignee_type assigned → conv1, conv2 (just user_1's open assigned)
+        expect(result[:conversations].length).to be 2
       end
 
       it 'returns the correct meta' do
         result = conversation_finder.perform
+        # After PermFilter + open status: conv1, conv2, conv5 (3 total)
+        # mine_count: conv1, conv2 = 2
+        # unassigned_count: conv5 = 1
+        # all_count: 3
+        # assigned_count: all_count - unassigned_count = 2
         expect(result[:count]).to eq({
                                        mine_count: 2,
-                                       assigned_count: 3,
+                                       assigned_count: 2,
                                        unassigned_count: 1,
-                                       all_count: 4
+                                       all_count: 3
                                      })
       end
     end
@@ -141,7 +164,10 @@ describe ConversationFinder do
     context 'with source_id' do
       let(:params) { { source_id: 'testing_source_id' } }
 
-      it 'filter conversations by source id' do
+      it 'filter conversations by source id when conversation is accessible to agent' do
+        # conv4 (contact_inbox with source_id) is assigned to user_2 and not visible to user_1.
+        # Create an additional accessible conversation (unassigned) linked to the same contact_inbox.
+        create(:conversation, account: account, inbox: inbox, contact_inbox: contact_inbox)
         result = conversation_finder.perform
         expect(result[:conversations].length).to be 1
       end
@@ -150,9 +176,11 @@ describe ConversationFinder do
     context 'without source' do
       let(:params) { {} }
 
-      it 'returns conversations with any source' do
+      it 'returns conversations accessible to the agent (own + unassigned)' do
         result = conversation_finder.perform
-        expect(result[:conversations].length).to be 4
+        # user_1 sees: conv1(open, mine), conv2(open, mine), conv5(open, unassigned) = 3
+        # conv4 (user_2's) and conv3 (resolved) are excluded by default open status filter
+        expect(result[:conversations].length).to be 3
       end
     end
 
