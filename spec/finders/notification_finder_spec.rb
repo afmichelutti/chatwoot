@@ -55,7 +55,7 @@ RSpec.describe NotificationFinder do
       end
     end
 
-    context 'assignment-based filtering for basic agents' do
+    context 'conversation access filtering' do
       let(:params) { { includes: %w[read snoozed] } }
 
       context 'when user is a basic agent (role=agent, no custom_role_id)' do
@@ -85,6 +85,38 @@ RSpec.describe NotificationFinder do
           results = notification_finder.notifications
           result_ids = results.map(&:id)
           expect(result_ids).to include(notif.id)
+        end
+      end
+
+      context 'when user is an agent with custom_role_id (not basic agent)' do
+        let!(:custom_role_agent) { create(:user, account: account) }
+        let(:notification_finder) { described_class.new(custom_role_agent, account, params) }
+
+        before do
+          # Set custom_role_id to simulate a custom role agent without needing a real CustomRole record
+          AccountUser.find_by(account_id: account.id, user_id: custom_role_agent.id)
+                     .update_column(:custom_role_id, 999)
+        end
+
+        it 'excludes notifications for conversations assigned to other agents' do
+          other_agent = create(:user, account: account)
+          conversation_assigned_to_other = create(:conversation, account: account, assignee: other_agent)
+          create(:notification, account: account, user: custom_role_agent, primary_actor: conversation_assigned_to_other)
+
+          results = notification_finder.notifications
+          result_conversation_ids = results.map { |n| n.primary_actor_id }
+          expect(result_conversation_ids).not_to include(conversation_assigned_to_other.id)
+        end
+
+        it 'includes notifications for own and unassigned conversations' do
+          conversation_mine = create(:conversation, account: account, assignee: custom_role_agent)
+          conversation_unassigned = create(:conversation, account: account)
+          notif_mine = create(:notification, account: account, user: custom_role_agent, primary_actor: conversation_mine)
+          notif_unassigned = create(:notification, account: account, user: custom_role_agent, primary_actor: conversation_unassigned)
+
+          results = notification_finder.notifications
+          result_ids = results.map(&:id)
+          expect(result_ids).to include(notif_mine.id, notif_unassigned.id)
         end
       end
 

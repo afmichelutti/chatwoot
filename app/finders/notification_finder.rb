@@ -32,7 +32,7 @@ class NotificationFinder
 
   def set_up
     find_all_notifications
-    filter_by_assignment_for_basic_agents
+    filter_by_conversation_access
     filter_snoozed_notifications
     filter_read_notifications
   end
@@ -41,11 +41,13 @@ class NotificationFinder
     @notifications = current_user.notifications.where(account_id: @current_account.id)
   end
 
-  # Basic agents (role='agent', no custom_role_id) should only see notifications
+  # Agents without 'conversation_manage' permission should only see notifications
   # for conversations that are unassigned or assigned to them.
-  # This mirrors the restriction in Conversations::PermissionFilterService.
-  def filter_by_assignment_for_basic_agents
-    return unless basic_agent?
+  # This applies to both basic agents AND custom role agents without full access.
+  # Mirrors the restriction in Conversations::PermissionFilterService.
+  def filter_by_conversation_access
+    return if account_user&.role == 'administrator'
+    return if agent_permissions.include?('conversation_manage')
 
     @notifications = @notifications
                      .joins("INNER JOIN conversations ON conversations.id = notifications.primary_actor_id
@@ -53,8 +55,8 @@ class NotificationFinder
                      .where('conversations.assignee_id IS NULL OR conversations.assignee_id = ?', current_user.id)
   end
 
-  def basic_agent?
-    account_user&.role == 'agent' && account_user&.custom_role_id.blank?
+  def agent_permissions
+    @agent_permissions ||= account_user&.permissions || []
   end
 
   def account_user
