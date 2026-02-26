@@ -2,7 +2,7 @@
 # use https://crontab.guru/ to validate
 # validations for this file exist in /spec/configs/schedule_spec.rb
 
-# executed At 12:00 on every day-of-month.
+# [NO-OP] Job desabilitado na versão customizada - perform é vazio
 internal_check_new_versions_job:
   cron: '0 12 */1 * *'
   class: 'Internal::CheckNewVersionsJob'

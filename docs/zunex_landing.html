@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZUNEX | Atendimento que evolui com o seu negócio</title>
+  <meta name="description" content="Plataforma de atendimento multicanal com agentes de IA. WhatsApp, Instagram e chat web em um só lugar.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zunex: {
+              dark: '#1a1f2e',
+              blue: '#0A84FF',
+              'blue-light': '#3B9CFF',
+              gray: '#64748b',
+              'gray-light': '#f8fafc'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .gradient-hero { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+    .gradient-cta { background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%); }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .btn-primary { background: linear-gradient(135deg, #0A84FF 0%, #3B9CFF 100%); transition: all 0.3s ease; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(10,132,255,0.4); }
+    .floating { animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  </style>
+</head>
+<body class="font-sans antialiased text-zunex-dark">
+
+  <!-- Navigation -->
+  <nav class="fixed top-4 left-4 right-4 z-50 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <img src="logos/zunex_logo.png" alt="ZUNEX" class="h-8">
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#problema" class="text-zunex-gray hover:text-zunex-dark transition-colors cursor-pointer">O Problema</a>
+        <a href="#solucao" class="text-zunex-gray hover:text-zunex-dark transition-colors cursor-pointer">Solução</a>
+        <a href="#agentes-ia" class="text-zunex-gray hover:text-zunex-dark transition-colors cursor-pointer">Agentes IA</a>
+        <a href="#beneficios" class="text-zunex-gray hover:text-zunex-dark transition-colors cursor-pointer">Benefícios</a>
+      </div>
+      <a href="#cta" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold cursor-pointer">Solicitar Demo</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="gradient-hero min-h-screen flex items-center pt-24 pb-16">
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-zunex-blue/10 text-zunex-blue px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+          Foco em WhatsApp
+        </div>
+        <h1 class="text-4xl lg:text-6xl font-800 leading-tight mb-6">
+          Seu atendimento no WhatsApp,
+          <span class="text-zunex-blue">potencializado por IA</span>
+        </h1>
+        <p class="text-xl text-zunex-gray mb-8 leading-relaxed">
+          Agentes de IA que atendem, qualificam leads e escalam para humanos quando necessário. Tudo organizado em uma única plataforma.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="#cta" class="btn-primary text-white px-8 py-4 rounded-xl font-semibold text-lg text-center cursor-pointer">
+            Solicitar Demonstração
+          </a>
+          <a href="#agentes-ia" class="bg-white text-zunex-dark px-8 py-4 rounded-xl font-semibold text-lg border border-gray-200 hover:border-zunex-blue transition-colors text-center cursor-pointer">
+            Conhecer Agentes IA
+          </a>
+        </div>
+      </div>
+      <div class="relative floating hidden lg:block">
+        <div class="bg-white rounded-3xl shadow-2xl p-6">
+          <div class="flex items-center gap-3 mb-4 pb-4 border-b">
+            <div class="w-10 h-10 bg-zunex-blue rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            </div>
+            <div>
+              <p class="font-semibold">Agente ZUNEX</p>
+              <p class="text-sm text-zunex-gray">Online agora</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div class="bg-zunex-gray-light rounded-2xl rounded-tl-sm p-4 max-w-[80%]">
+              <p class="text-sm">Olá! Como posso ajudar você hoje?</p>
+            </div>
+            <div class="bg-zunex-blue text-white rounded-2xl rounded-tr-sm p-4 max-w-[80%] ml-auto">
+              <p class="text-sm">Quero saber sobre os planos</p>
+            </div>
+            <div class="bg-zunex-gray-light rounded-2xl rounded-tl-sm p-4 max-w-[80%]">
+              <p class="text-sm">Claro! Temos 3 opções. Posso explicar cada uma ou conectar você com um especialista?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem Section -->
+  <section id="problema" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl lg:text-4xl font-800 mb-4">O atendimento pelo WhatsApp está travando seu crescimento?</h2>
+        <p class="text-xl text-zunex-gray max-w-2xl mx-auto">Sua equipe enfrenta esses desafios diariamente?</p>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-red-50 border border-red-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Conversas desorganizadas</h3>
+          <p class="text-zunex-gray">Histórico perdido, atendentes sem contexto do cliente, informações espalhadas.</p>
+        </div>
+        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Respostas lentas</h3>
+          <p class="text-zunex-gray">Clientes esperando horas ou dias por uma resposta simples.</p>
+        </div>
+        <div class="bg-yellow-50 border border-yellow-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Equipe sobrecarregada</h3>
+          <p class="text-zunex-gray">Atendentes respondendo as mesmas perguntas repetidamente.</p>
+        </div>
+        <div class="bg-purple-50 border border-purple-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Falta de padrão</h3>
+          <p class="text-zunex-gray">Cada atendente responde de um jeito, sem script definido.</p>
+        </div>
+        <div class="bg-pink-50 border border-pink-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Oportunidades perdidas</h3>
+          <p class="text-zunex-gray">Leads que desistem por falta de resposta ou atendimento ruim.</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 card-hover cursor-pointer">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Não escala</h3>
+          <p class="text-zunex-gray">Crescer significa contratar mais gente, aumentando custos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Section -->
+  <section id="solucao" class="py-24 bg-zunex-gray-light">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl lg:text-4xl font-800 mb-4">ZUNEX: Atendimento que evolui com o seu negócio</h2>
+        <p class="text-xl text-zunex-gray max-w-2xl mx-auto">Uma plataforma onde pessoas e inteligência artificial trabalham juntas.</p>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-8">
+        <div class="bg-white rounded-3xl p-8 shadow-lg card-hover cursor-pointer">
+          <div class="w-14 h-14 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+          <h3 class="text-xl font-700 mb-3">Central Inteligente</h3>
+          <p class="text-zunex-gray">Todas as conversas em um único lugar. WhatsApp, Instagram, chat web - tudo organizado e com histórico completo.</p>
+        </div>
+        <div class="bg-white rounded-3xl p-8 shadow-lg card-hover cursor-pointer">
+          <div class="w-14 h-14 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-xl font-700 mb-3">Automação com IA</h3>
+          <p class="text-zunex-gray">Agentes de IA que entendem contexto, respondem perguntas frequentes e qualificam leads automaticamente.</p>
+        </div>
+        <div class="bg-white rounded-3xl p-8 shadow-lg card-hover cursor-pointer">
+          <div class="w-14 h-14 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mb-6">
+            <svg class="w-7 h-7 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <h3 class="text-xl font-700 mb-3">Escala Ilimitada</h3>
+          <p class="text-zunex-gray">Cresça sem aumentar custos proporcionalmente. A IA absorve o volume, humanos focam no que importa.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Agents Section (Main) -->
+  <section id="agentes-ia" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 bg-zunex-blue/10 text-zunex-blue px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          Diferencial ZUNEX
+        </div>
+        <h2 class="text-3xl lg:text-4xl font-800 mb-4">Agentes de IA que trabalham por você</h2>
+        <p class="text-xl text-zunex-gray max-w-3xl mx-auto">Não são robôs que substituem pessoas. São assistentes inteligentes que potencializam sua equipe.</p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+        <div>
+          <h3 class="text-2xl font-700 mb-6">O que os Agentes de IA fazem?</h3>
+          <div class="space-y-4">
+            <div class="flex items-start gap-4 p-4 bg-zunex-gray-light rounded-xl">
+              <div class="w-8 h-8 bg-zunex-blue rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h4 class="font-600 mb-1">Atendimento inicial 24/7</h4>
+                <p class="text-zunex-gray text-sm">Responde instantaneamente a qualquer hora, sem deixar cliente esperando.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-zunex-gray-light rounded-xl">
+              <div class="w-8 h-8 bg-zunex-blue rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h4 class="font-600 mb-1">Perguntas frequentes</h4>
+                <p class="text-zunex-gray text-sm">Responde automaticamente sobre horários, preços, endereços, políticas.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-zunex-gray-light rounded-xl">
+              <div class="w-8 h-8 bg-zunex-blue rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h4 class="font-600 mb-1">Qualificação de leads</h4>
+                <p class="text-zunex-gray text-sm">Coleta informações importantes antes de passar para a equipe comercial.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-zunex-gray-light rounded-xl">
+              <div class="w-8 h-8 bg-zunex-blue rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h4 class="font-600 mb-1">Triagem inteligente</h4>
+                <p class="text-zunex-gray text-sm">Direciona para o setor correto com base no assunto da conversa.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 bg-zunex-gray-light rounded-xl">
+              <div class="w-8 h-8 bg-zunex-blue rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <h4 class="font-600 mb-1">Escalonamento para humanos</h4>
+                <p class="text-zunex-gray text-sm">Quando necessário, passa a conversa para um atendente com todo o contexto.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gradient-to-br from-zunex-blue/5 to-zunex-blue/10 rounded-3xl p-8">
+          <h3 class="text-2xl font-700 mb-6">Como eles aprendem?</h3>
+          <div class="space-y-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md font-700 text-zunex-blue">1</div>
+              <p class="flex-1">Você configura a base de conhecimento da sua empresa</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md font-700 text-zunex-blue">2</div>
+              <p class="flex-1">O agente aprende com cada interação e feedback</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md font-700 text-zunex-blue">3</div>
+              <p class="flex-1">Você ajusta e refina as respostas ao longo do tempo</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md font-700 text-zunex-blue">4</div>
+              <p class="flex-1">O agente evolui continuamente com seu negócio</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WhatsApp Section -->
+  <section class="py-24 bg-zunex-gray-light">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+            Canal Principal
+          </div>
+          <h2 class="text-3xl lg:text-4xl font-800 mb-6">WhatsApp Business API integrado</h2>
+          <p class="text-xl text-zunex-gray mb-8">O canal que seus clientes mais usam, agora com toda a potência da ZUNEX.</p>
+          <ul class="space-y-4">
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Número oficial verificado</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Múltiplos atendentes no mesmo número</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Histórico completo de conversas</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Templates de mensagens aprovados</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Automação com agentes de IA</span>
+            </li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-3xl p-8 shadow-xl">
+          <h3 class="font-700 text-lg mb-6">Outros canais disponíveis</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center gap-3 p-4 bg-zunex-gray-light rounded-xl cursor-pointer card-hover">
+              <svg class="w-8 h-8 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
+              <span class="font-500">Instagram</span>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-zunex-gray-light rounded-xl cursor-pointer card-hover">
+              <svg class="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              <span class="font-500">Chat Web</span>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-zunex-gray-light rounded-xl cursor-pointer card-hover">
+              <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+              <span class="font-500">Telegram</span>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-zunex-gray-light rounded-xl cursor-pointer card-hover">
+              <svg class="w-8 h-8 text-zunex-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+              <span class="font-500 text-zunex-gray">Em breve...</span>
+            </div>
+          </div>
+          <p class="text-sm text-zunex-gray mt-6 text-center">Tudo em um único lugar. Um único histórico. Uma única experiência.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section id="beneficios" class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl lg:text-4xl font-800 mb-4">Benefícios reais para o seu negócio</h2>
+        <p class="text-xl text-zunex-gray max-w-2xl mx-auto">Resultados que você pode medir desde o primeiro mês.</p>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Atendimento instantâneo</h3>
+          <p class="text-zunex-gray">Respostas em segundos, não em horas. Clientes satisfeitos desde o primeiro contato.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Redução de custos</h3>
+          <p class="text-zunex-gray">Automatize até 70% dos atendimentos repetitivos. Sua equipe foca no que importa.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Controle total</h3>
+          <p class="text-zunex-gray">Dashboard completo com métricas, relatórios e insights sobre seu atendimento.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Escala sem limite</h3>
+          <p class="text-zunex-gray">Cresça de 100 para 10.000 atendimentos sem contratar proporcionalmente.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Experiência premium</h3>
+          <p class="text-zunex-gray">Clientes atendidos rapidamente, com qualidade consistente em qualquer horário.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-zunex-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-zunex-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="font-700 text-lg mb-2">Disponível 24/7</h3>
+          <p class="text-zunex-gray">Agentes de IA atendendo mesmo fora do horário comercial, feriados e fins de semana.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Who Section -->
+  <section class="py-24 bg-zunex-gray-light">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl lg:text-4xl font-800 mb-4">Para quem é a ZUNEX?</h2>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="bg-white rounded-3xl p-8 shadow-lg">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-xl font-700 text-green-700">ZUNEX é ideal para</h3>
+          </div>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Empresas que usam WhatsApp como canal principal</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Clínicas, consultórios e serviços de saúde</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Concessionárias e lojas de veículos</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Varejo e e-commerce com atendimento ativo</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Escolas e instituições de ensino</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Empresas em crescimento que querem escalar</span>
+            </li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-3xl p-8 shadow-lg">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <h3 class="text-xl font-700 text-red-700">ZUNEX não é para</h3>
+          </div>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span>Quem quer substituir completamente humanos por robôs</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span>Empresas que não valorizam experiência do cliente</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span>Quem busca só disparar mensagens em massa</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span>Negócios sem volume de atendimento</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="cta" class="py-24 gradient-cta text-white">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-3xl lg:text-5xl font-800 mb-6">Pronto para transformar seu atendimento?</h2>
+      <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">Agende uma demonstração gratuita e veja como a ZUNEX pode ajudar seu negócio a crescer.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#" class="bg-white text-zunex-dark px-8 py-4 rounded-xl font-semibold text-lg hover:bg-zunex-blue hover:text-white transition-all cursor-pointer">
+          Solicitar Demonstração
+        </a>
+        <a href="#" class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/10 transition-all cursor-pointer">
+          Falar com Especialista
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 bg-zunex-dark text-white">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <img src="logos/zunex_logo.png" alt="ZUNEX" class="h-8 brightness-0 invert">
+        <p class="text-white/60 text-sm">Atendimento que evolui com o seu negócio</p>
+        <p class="text-white/40 text-sm">© 2024 ZUNEX. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

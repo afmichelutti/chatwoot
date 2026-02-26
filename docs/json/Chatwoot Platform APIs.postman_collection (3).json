@@ -1,0 +1,976 @@
+{
+  "info": {
+    "_postman_id": "e5451b69-9f97-489b-b352-4ca7d8d82aff",
+    "name": "Chatwoot Platform APIs",
+    "description": "- create appropriate environments and populate the environment variables",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "9982379",
+    "_collection_link": "https://go.postman.co/collection/162770-e5451b69-9f97-489b-b352-4ca7d8d82aff?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"password\": \"test1234@A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users/40",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users",
+                "40"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get SSO Link",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "platformAppApiKey",
+                "value": "zZCBD9y2YWkFjjUSkKresEuJ",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users/14/login",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users",
+                "14",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users/{{user_id}}/login",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users",
+                "{{user_id}}",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"test6\",\n\t\"email\": \"test3@test.com\",\n\t\"password\": \"test1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users/2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/users/2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "users",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "Delete Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "6PhyUZ363aKizQ2keX9uUfod",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"test3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"test3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Account Users",
+      "item": [
+        {
+          "name": "Get Account Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"account_name\": \"test3\",\n\t\"email\": \"test3@test.com\",\n\t\"confirmed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/2/account_users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "2",
+                "account_users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "name": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"user_id\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/2/account_users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "2",
+                "account_users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Account Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseHeaders = pm.response.headers.all();",
+                  "var responseHeaderObject = {}",
+                  "",
+                  "responseHeaders.forEach(function (header) {",
+                  "  responseHeaderObject[header.key] = header.value",
+                  "})",
+                  "",
+                  "postman.setEnvironmentVariable(\"access-token\", responseHeaderObject['access-token']);",
+                  "postman.setEnvironmentVariable(\"client\", responseHeaderObject.client);",
+                  "postman.setEnvironmentVariable(\"expiry\", responseHeaderObject.expiry);",
+                  "postman.setEnvironmentVariable(\"token-type\", responseHeaderObject['token-type']);",
+                  "postman.setEnvironmentVariable(\"uid\", responseHeaderObject.uid);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "api_access_token",
+                "value": "{{api_access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"user_id\": \"40\",\n    \"role\": \"administrator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/accounts/6/account_users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "accounts",
+                "6",
+                "account_users"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Agent Bots",
+      "item": [
+        {
+          "name": "List all AgentBots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/agent_bots",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "agent_bots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create an Agent Bot",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\"name\": \"test\",\n\"description\": \"test\",\n\"outgoing_url\": \"test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/platform/{{api_version}}/agent_bots",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "platform",
+                "{{api_version}}",
+                "agent_bots"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{platformAppApiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "api_access_token",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_access_token",
+      "value": "nil"
+    },
+    {
+      "key": "account_id",
+      "value": "1"
+    },
+    {
+      "key": "api_version_2",
+      "value": "api/v2"
+    },
+    {
+      "key": "api_version",
+      "value": "api/v1"
+    }
+  ]
+}

@@ -1,0 +1,579 @@
+{
+  "info": {
+    "_postman_id": "9b283c34-96a9-494f-bb52-c5c6ab864a4a",
+    "name": "Chatwoot Public APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "9982379",
+    "_collection_link": "https://go.postman.co/collection/162770-9b283c34-96a9-494f-bb52-c5c6ab864a4a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create a new contact",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "    pm.environment.unset(\"contact_identifier\");",
+              "    var jsonData = pm.response.json()",
+              "    pm.environment.set(\"contact_identifier\", jsonData.source_id)"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "access-token",
+            "type": "text",
+            "value": "{{access-token}}",
+            "disabled": true
+          },
+          {
+            "key": "client",
+            "type": "text",
+            "value": "{{client}}",
+            "disabled": true
+          },
+          {
+            "key": "expiry",
+            "type": "text",
+            "value": "{{expiry}}",
+            "disabled": true
+          },
+          {
+            "key": "token-type",
+            "type": "text",
+            "value": "{{token-type}}",
+            "disabled": true
+          },
+          {
+            "key": "uid",
+            "type": "text",
+            "value": "{{uid}}",
+            "disabled": true
+          },
+          {
+            "key": "Content-Type",
+            "name": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Kurishinkal\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get contact details",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "access-token",
+            "type": "text",
+            "value": "{{access-token}}",
+            "disabled": true
+          },
+          {
+            "key": "client",
+            "type": "text",
+            "value": "{{client}}",
+            "disabled": true
+          },
+          {
+            "key": "expiry",
+            "type": "text",
+            "value": "{{expiry}}",
+            "disabled": true
+          },
+          {
+            "key": "token-type",
+            "type": "text",
+            "value": "{{token-type}}",
+            "disabled": true
+          },
+          {
+            "key": "uid",
+            "type": "text",
+            "value": "{{uid}}",
+            "disabled": true
+          },
+          {
+            "key": "Content-Type",
+            "name": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all conversations",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "access-token",
+            "type": "text",
+            "value": "{{access-token}}",
+            "disabled": true
+          },
+          {
+            "key": "client",
+            "type": "text",
+            "value": "{{client}}",
+            "disabled": true
+          },
+          {
+            "key": "expiry",
+            "type": "text",
+            "value": "{{expiry}}",
+            "disabled": true
+          },
+          {
+            "key": "token-type",
+            "type": "text",
+            "value": "{{token-type}}",
+            "disabled": true
+          },
+          {
+            "key": "uid",
+            "type": "text",
+            "value": "{{uid}}",
+            "disabled": true
+          },
+          {
+            "key": "Content-Type",
+            "name": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"source_id\":\"62a5ba8c-0f91-4eab-9147-8886d1031da3\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Conversation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "    pm.environment.unset(\"conversation_id\");",
+              "    var jsonData = pm.response.json()",
+              "    pm.environment.set(\"conversation_id\", jsonData.id)"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "access-token",
+            "type": "text",
+            "value": "{{access-token}}",
+            "disabled": true
+          },
+          {
+            "key": "client",
+            "type": "text",
+            "value": "{{client}}",
+            "disabled": true
+          },
+          {
+            "key": "expiry",
+            "type": "text",
+            "value": "{{expiry}}",
+            "disabled": true
+          },
+          {
+            "key": "token-type",
+            "type": "text",
+            "value": "{{token-type}}",
+            "disabled": true
+          },
+          {
+            "key": "uid",
+            "type": "text",
+            "value": "{{uid}}",
+            "disabled": true
+          },
+          {
+            "key": "Content-Type",
+            "name": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"source_id\": \"{{contact_identifier}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create new message",
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"content\": \"hey agent\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations/{{conversation_id}}/messages",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations",
+            "{{conversation_id}}",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all messages",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true,
+        "disabledSystemHeaders": {
+          "content-type": true
+        }
+      },
+      "request": {
+        "auth": {
+          "type": "bearer"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "access-token",
+            "type": "text",
+            "value": "{{access-token}}",
+            "disabled": true
+          },
+          {
+            "key": "client",
+            "type": "text",
+            "value": "{{client}}",
+            "disabled": true
+          },
+          {
+            "key": "expiry",
+            "type": "text",
+            "value": "{{expiry}}",
+            "disabled": true
+          },
+          {
+            "key": "token-type",
+            "type": "text",
+            "value": "{{token-type}}",
+            "disabled": true
+          },
+          {
+            "key": "uid",
+            "type": "text",
+            "value": "{{uid}}",
+            "disabled": true
+          },
+          {
+            "key": "Content-Type",
+            "name": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api_access_token",
+            "value": "{{api_access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"content\": \"hey agent\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations/{{conversation_id}}/messages",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations",
+            "{{conversation_id}}",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Toggle Typing",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"typing_status\": \"off\" }"
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations/{{conversation_id}}}}/toggle_typing",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations",
+            "{{conversation_id}}}}",
+            "toggle_typing"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Mark messages as read",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{host}}/public/{{api_version}}/inboxes/{{inbox_identifier}}/contacts/{{contact_identifier}}/conversations/{{conversation_id}}}}/update_last_seen",
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "public",
+            "{{api_version}}",
+            "inboxes",
+            "{{inbox_identifier}}",
+            "contacts",
+            "{{contact_identifier}}",
+            "conversations",
+            "{{conversation_id}}}}",
+            "update_last_seen"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
