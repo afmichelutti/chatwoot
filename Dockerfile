@@ -1,4 +1,4 @@
-FROM chatwoot/chatwoot:v4.7.0
+FROM chatwoot/chatwoot:v4.11.1
 
 # instala o nodejs e o yarn para que possamos recompilar os assets do rails
 RUN apk update && apk add --no-cache \
@@ -30,7 +30,8 @@ COPY ./db/migrate /app/db/migrate
 
 COPY ./theme /app/theme
 
-COPY ./enterprise/lib/enterprise/integrations/openai_prompts /app/enterprise/lib/enterprise/integrations/openai_prompts
+# Removed: openai_prompts path no longer exists in v4.11.1 (replaced by Captain system)
+# COPY ./enterprise/lib/enterprise/integrations/openai_prompts /app/enterprise/lib/enterprise/integrations/openai_prompts
 
 #COPY ./chatwoot/app/javascript/dashboard/components/ChatList.vue /app/app/javascript/dashboard/components/ChatList.vue
 
@@ -52,5 +53,5 @@ RUN SECRET_KEY_BASE=precompile_placeholder RAILS_ENV=production bundle exec rake
 RUN SECRET_KEY_BASE=precompile_placeholder RAILS_ENV=production bundle exec rake assets:precompile
 
 
-####  docker build --no-cache -t afmichelutti/omniflex_cw_470 .
-####  docker push afmichelutti/omniflex_cw_470
+####  docker build --no-cache -t afmichelutti/omniflex_cw_4111 .
+####  docker push afmichelutti/omniflex_cw_4111

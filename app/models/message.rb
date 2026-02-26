@@ -313,6 +313,7 @@ class Message < ApplicationRecord
   def execute_after_create_commit_callbacks
     # rails issue with order of active record callbacks being executed https://github.com/rails/rails/issues/20911
     reopen_conversation
+    auto_assign_agent_on_reply
     set_conversation_activity
     dispatch_create_events
     send_reply
@@ -395,6 +396,18 @@ class Message < ApplicationRecord
     # FIXME: Giving it few seconds for the attachment to be uploaded to the service
     # active storage attaches the file only after commit
     attachments.blank? ? ::SendReplyJob.perform_later(id) : ::SendReplyJob.set(wait: 2.seconds).perform_later(id)
+  end
+
+  def auto_assign_agent_on_reply
+    return unless outgoing?
+    return unless sender.is_a?(User)
+    return if private?
+    return if content_attributes['automation_rule_id'].present?
+    return if additional_attributes['campaign_id'].present?
+    return unless conversation.assignee_id.nil?
+    return unless inbox.auto_assign_on_reply
+
+    conversation.update!(assignee_id: sender_id)
   end
 
   def reopen_conversation

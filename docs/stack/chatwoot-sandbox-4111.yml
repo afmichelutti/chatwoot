@@ -1,0 +1,211 @@
+version: "3.7"
+
+##############
+#
+# Chatwoot Sandbox 4.11.1 - Stack para migração/testes
+# Usa o mesmo Postgres da VPS (database: chat_sand)
+# Usa o mesmo S3, SMTP, etc. da produção
+#
+# Deploy:
+#   1. Criar database: docker exec postgres psql -U <user> -c "CREATE DATABASE chat_sand;"
+#   2. Restaurar dump: docker exec postgres pg_restore -U <user> -d chat_sand /tmp/chatwoot_352_backup.dump
+#   3. Deploy stack no Portainer
+#   4. Rodar migrations: docker exec <container_sandbox> bundle exec rails db:chatwoot_prepare
+#
+##############
+
+services:
+
+  # ============================================
+  # Redis exclusivo do Sandbox
+  # ============================================
+  chatwoot_sandbox_redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - network_public
+    volumes:
+      - chatwoot_sandbox_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ============================================
+  # Chatwoot Sandbox - Web Server (Rails)
+  # ============================================
+  chatwoot_sandbox:
+    image: afmichelutti/omniflex_cw_4111
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    entrypoint: docker/entrypoints/rails.sh
+
+    volumes:
+      - chatwoot_sandbox_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Configuração Básica =====
+      - INSTALLATION_NAME=${SAND_INSTALLATION_NAME:-Appio Sandbox}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${SAND_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chatsandbox.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+      - ENABLE_ACCOUNT_SIGNUP=false
+
+      # ===== Redis (exclusivo do Sandbox) =====
+      - REDIS_URL=redis://chatwoot_sandbox_redis:6379/1
+
+      # ===== PostgreSQL (mesmo servidor, database diferente) =====
+      - POSTGRES_HOST=${SAND_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${SAND_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${SAND_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${SAND_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_sand
+
+      # ===== AWS S3 Storage =====
+      - ACTIVE_STORAGE_SERVICE=amazon
+      - AWS_ACCESS_KEY_ID=${SAND_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${SAND_AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${SAND_AWS_REGION:-sa-east-1}
+      - S3_BUCKET_NAME=${SAND_S3_BUCKET_NAME}
+
+      # ===== SMTP Email =====
+      - MAILER_SENDER_EMAIL=${SAND_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${SAND_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${SAND_SMTP_PORT:-587}
+      - SMTP_USERNAME=${SAND_SMTP_USERNAME}
+      - SMTP_PASSWORD=${SAND_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${SAND_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Performance (Sandbox - conservador) =====
+      - WEB_CONCURRENCY=2
+      - RAILS_MAX_THREADS=5
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
+      labels:
+        # Traefik Configuration
+        - traefik.enable=true
+        - traefik.http.routers.chatwoot_sandbox.rule=Host(`chatsandbox.appio.com.br`)
+        - traefik.http.routers.chatwoot_sandbox.entrypoints=websecure
+        - traefik.http.routers.chatwoot_sandbox.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.chatwoot_sandbox.service=chatwoot_sandbox
+        - traefik.http.services.chatwoot_sandbox.loadbalancer.server.port=3000
+        - traefik.http.services.chatwoot_sandbox.loadbalancer.passhostheader=true
+        # SSL & WebSocket Headers
+        - traefik.http.middlewares.sslheader_sandbox.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.chatwoot_sandbox.middlewares=sslheader_sandbox@docker
+
+  # ============================================
+  # Chatwoot Sandbox - Sidekiq (Background Jobs)
+  # ============================================
+  chatwoot_sandbox_sidekiq:
+    image: afmichelutti/omniflex_cw_4111
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+    volumes:
+      - chatwoot_sandbox_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Mesmas variáveis do sandbox web =====
+      - INSTALLATION_NAME=${SAND_INSTALLATION_NAME:-Appio Sandbox}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${SAND_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chatsandbox.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+
+      # ===== Redis (exclusivo do Sandbox) =====
+      - REDIS_URL=redis://chatwoot_sandbox_redis:6379/1
+
+      # ===== PostgreSQL =====
+      - POSTGRES_HOST=${SAND_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${SAND_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${SAND_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${SAND_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_sand
+
+      # ===== AWS S3 =====
+      - ACTIVE_STORAGE_SERVICE=amazon
+      - AWS_ACCESS_KEY_ID=${SAND_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${SAND_AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${SAND_AWS_REGION:-sa-east-1}
+      - S3_BUCKET_NAME=${SAND_S3_BUCKET_NAME}
+
+      # ===== SMTP =====
+      - MAILER_SENDER_EMAIL=${SAND_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${SAND_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${SAND_SMTP_PORT:-587}
+      - SMTP_USERNAME=${SAND_SMTP_USERNAME}
+      - SMTP_PASSWORD=${SAND_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${SAND_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Sidekiq Performance (Sandbox - conservador) =====
+      - SIDEKIQ_CONCURRENCY=10
+      - RAILS_MAX_THREADS=10
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+# ============================================
+# Volumes & Networks
+# ============================================
+volumes:
+  chatwoot_sandbox_data:
+    driver: local
+  chatwoot_sandbox_redis_data:
+    driver: local
+
+networks:
+  network_public:
+    external: true
+    name: network_public

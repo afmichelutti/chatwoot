@@ -30,6 +30,7 @@ const { isEnterprise } = useConfig();
 const selectedAgents = ref([]);
 const isAgentListUpdating = ref(false);
 const enableAutoAssignment = ref(false);
+const autoAssignOnReply = ref(true);
 const maxAssignmentLimit = ref(null);
 const assignmentPolicy = ref(null);
 const isLoadingPolicy = ref(false);
@@ -299,8 +300,23 @@ const deleteAssignmentPolicy = async () => {
   }
 };
 
+const handleToggleAutoAssignOnReply = async () => {
+  try {
+    const payload = {
+      id: props.inbox.id,
+      formData: false,
+      auto_assign_on_reply: autoAssignOnReply.value,
+    };
+    await store.dispatch('inboxes/updateInbox', payload);
+    useAlert(t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
+  } catch (error) {
+    useAlert(t('INBOX_MGMT.EDIT.API.ERROR_MESSAGE'));
+  }
+};
+
 const setDefaults = () => {
   enableAutoAssignment.value = props.inbox.enable_auto_assignment;
+  autoAssignOnReply.value = props.inbox.auto_assign_on_reply ?? true;
   maxAssignmentLimit.value =
     props.inbox.auto_assignment_config?.max_assignment_limit || null;
   fetchAttachedAgents();
@@ -364,6 +380,24 @@ onMounted(() => {
             </label>
             <p class="text-sm text-n-slate-11">
               {{ $t('INBOX_MGMT.ASSIGNMENT.DESCRIPTION') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 mt-4">
+          <Switch
+            v-model="autoAssignOnReply"
+            class="flex-shrink-0 mt-0.5"
+            @change="handleToggleAutoAssignOnReply"
+          />
+          <div class="flex-grow">
+            <label class="text-sm text-n-slate-12 font-medium mb-1">
+              {{ $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_ASSIGN_ON_REPLY') }}
+            </label>
+            <p class="text-sm text-n-slate-11">
+              {{
+                $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_ASSIGN_ON_REPLY_SUB_TEXT')
+              }}
             </p>
           </div>
         </div>
@@ -640,6 +674,24 @@ onMounted(() => {
             @click="updateInbox"
           />
         </div>
+
+        <label class="w-3/4 settings-item mt-2">
+          <div class="flex items-center gap-2">
+            <input
+              id="autoAssignOnReply"
+              v-model="autoAssignOnReply"
+              type="checkbox"
+              @change="handleToggleAutoAssignOnReply"
+            />
+            <label for="autoAssignOnReply">
+              {{ $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_ASSIGN_ON_REPLY') }}
+            </label>
+          </div>
+
+          <p class="pb-1 text-sm not-italic text-n-slate-11">
+            {{ $t('INBOX_MGMT.SETTINGS_POPUP.AUTO_ASSIGN_ON_REPLY_SUB_TEXT') }}
+          </p>
+        </label>
       </template>
     </SettingsSection>
 

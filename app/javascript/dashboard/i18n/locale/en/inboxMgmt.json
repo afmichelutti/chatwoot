@@ -713,6 +713,8 @@
       "INBOX_UPDATE_TITLE": "Inbox Settings",
       "INBOX_UPDATE_SUB_TEXT": "Update your inbox settings",
       "AUTO_ASSIGNMENT_SUB_TEXT": "Enable or disable the automatic assignment of new conversations to the agents added to this inbox.",
+      "AUTO_ASSIGN_ON_REPLY": "Auto-assign agent on reply",
+      "AUTO_ASSIGN_ON_REPLY_SUB_TEXT": "Automatically assign the conversation to the agent when they send the first reply to an unassigned conversation.",
       "HMAC_VERIFICATION": "User Identity Validation",
       "HMAC_DESCRIPTION": "With this key you can generate a secret token that can be used to verify the identity of your users.",
       "HMAC_LINK_TO_DOCS": "You can read more here.",
