@@ -77,10 +77,14 @@ class Telegram::IncomingMessageService
   end
 
   def set_conversation
-    # if lock to single conversation is enabled, reuse the last conversation (even if resolved) to keep 1 conversation per inbox
+    # if lock is enabled, reuse only conversations where an operator has replied (has outgoing messages)
     # if disabled, create a new conversation when the previous one is resolved
     @conversation = if @inbox.lock_to_single_conversation
-                      @contact_inbox.conversations.last
+                      @contact_inbox.conversations
+                                    .joins(:messages)
+                                    .where(messages: { message_type: :outgoing })
+                                    .order(created_at: :desc)
+                                    .first
                     else
                       @contact_inbox.conversations
                                     .where.not(status: :resolved).last

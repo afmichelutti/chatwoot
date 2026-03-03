@@ -10,7 +10,7 @@ class ConversationBuilder
   def look_up_exising_conversation
     return unless @contact_inbox.inbox.lock_to_single_conversation?
 
-    @contact_inbox.conversations.where.not(status: :resolved).last
+    @contact_inbox.conversations.where.not(status: :resolved).joins(:messages).where(messages: { message_type: :outgoing }).last
   end
 
   def create_new_conversation
