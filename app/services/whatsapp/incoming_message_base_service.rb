@@ -129,8 +129,14 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   def set_conversation
-    # reuse the last non-resolved conversation; create a new one if none exist
-    @conversation = @contact_inbox.conversations.where.not(status: :resolved).last
+    # if lock to single conversation is enabled, reuse the last conversation (even if resolved) to keep 1 conversation per inbox
+    # if disabled, create a new conversation when the previous one is resolved
+    @conversation = if @inbox.lock_to_single_conversation
+                      @contact_inbox.conversations.last
+                    else
+                      @contact_inbox.conversations
+                                    .where.not(status: :resolved).last
+                    end
     return if @conversation
 
     @conversation = ::Conversation.create!(conversation_params)
