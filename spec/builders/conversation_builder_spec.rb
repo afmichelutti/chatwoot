@@ -43,7 +43,7 @@ describe ConversationBuilder do
         expect(conversation.contact_inbox_id).to eq(contact_sms_inbox.id)
       end
 
-      it 'returns last from existing sms conversations when existing conversation is not present' do
+      it 'returns last open/pending/snoozed sms conversation when one exists' do
         create(:conversation, contact_inbox: contact_sms_inbox)
         existing_conversation = create(:conversation, contact_inbox: contact_sms_inbox)
         conversation = described_class.new(
@@ -52,6 +52,19 @@ describe ConversationBuilder do
         ).perform
 
         expect(conversation.id).to eq(existing_conversation.id)
+      end
+
+      it 'creates a new conversation when all existing sms conversations are resolved' do
+        create(:conversation, contact_inbox: contact_sms_inbox, status: :resolved)
+
+        conversation = described_class.new(
+          contact_inbox: contact_sms_inbox,
+          params: {}
+        ).perform
+
+        expect(conversation).to be_persisted
+        expect(conversation.contact_inbox_id).to eq(contact_sms_inbox.id)
+        expect(conversation.status).not_to eq('resolved')
       end
     end
 
@@ -69,7 +82,7 @@ describe ConversationBuilder do
         expect(conversation.contact_inbox_id).to eq(contact_api_inbox.id)
       end
 
-      it 'returns last from existing api conversations when existing conversation is not present' do
+      it 'returns last open/pending/snoozed api conversation when one exists' do
         create(:conversation, contact_inbox: contact_api_inbox)
         existing_conversation = create(:conversation, contact_inbox: contact_api_inbox)
         conversation = described_class.new(
@@ -78,6 +91,38 @@ describe ConversationBuilder do
         ).perform
 
         expect(conversation.id).to eq(existing_conversation.id)
+      end
+
+      it 'creates a new conversation when all existing api conversations are resolved' do
+        create(:conversation, contact_inbox: contact_api_inbox, status: :resolved)
+
+        conversation = described_class.new(
+          contact_inbox: contact_api_inbox,
+          params: {}
+        ).perform
+
+        expect(conversation).to be_persisted
+        expect(conversation.contact_inbox_id).to eq(contact_api_inbox.id)
+        expect(conversation.status).not_to eq('resolved')
+      end
+    end
+
+    context 'when lock_to_single_conversation is true on both inboxes' do
+      before do
+        sms_inbox.update!(lock_to_single_conversation: true)
+        api_inbox.update!(lock_to_single_conversation: true)
+      end
+
+      it 'allows creating a conversation in inbox B when inbox A has an open conversation' do
+        create(:conversation, contact_inbox: contact_sms_inbox)
+
+        conversation = described_class.new(
+          contact_inbox: contact_api_inbox,
+          params: {}
+        ).perform
+
+        expect(conversation).to be_persisted
+        expect(conversation.contact_inbox_id).to eq(contact_api_inbox.id)
       end
     end
   end
