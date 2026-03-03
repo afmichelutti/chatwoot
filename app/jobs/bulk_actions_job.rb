@@ -18,6 +18,7 @@ class BulkActionsJob < ApplicationJob
 
   def bulk_update
     bulk_remove_labels
+    bulk_mark_as_unread
     bulk_conversation_update
   end
 
@@ -33,6 +34,21 @@ class BulkActionsJob < ApplicationJob
   def bulk_remove_labels
     records.each do |conversation|
       remove_labels(conversation)
+    end
+  end
+
+  def bulk_mark_as_unread
+    return unless @params[:action_name] == 'mark_as_unread'
+
+    records.each do |conversation|
+      last_incoming_message = conversation.messages.incoming.last
+      next unless last_incoming_message
+
+      last_seen_at = last_incoming_message.created_at - 1.second
+      conversation.update_columns(
+        agent_last_seen_at: last_seen_at,
+        assignee_last_seen_at: last_seen_at
+      )
     end
   end
 

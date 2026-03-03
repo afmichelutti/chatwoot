@@ -57,6 +57,7 @@ export default {
     'assignLabels',
     'assignTeam',
     'resolveConversations',
+    'markAsUnread',
   ],
   data() {
     return {
@@ -137,6 +138,9 @@ export default {
     resolveConversations() {
       this.$emit('resolveConversations');
     },
+    markAsUnread() {
+      this.$emit('markAsUnread');
+    },
     toggleUpdateActions() {
       this.showUpdateActions = !this.showUpdateActions;
     },
@@ -173,6 +177,14 @@ export default {
         </span>
       </label>
       <div class="flex items-center gap-1 bulk-action__actions">
+        <NextButton
+          v-tooltip="$t('BULK_ACTION.MARK_AS_UNREAD.TOOLTIP')"
+          icon="i-lucide-mail"
+          slate
+          xs
+          faded
+          @click="markAsUnread"
+        />
         <NextButton
           v-tooltip="$t('BULK_ACTION.LABELS.ASSIGN_LABELS')"
           icon="i-lucide-tags"

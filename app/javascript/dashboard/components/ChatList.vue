@@ -148,6 +148,7 @@ const {
   onRemoveLabels,
   onAssignTeamsForBulk,
   onUpdateConversations,
+  onMarkAsUnread,
 } = useBulkActions();
 
 const {
@@ -974,6 +975,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       @update-conversations="onUpdateConversations"
       @assign-labels="onAssignLabels"
       @assign-team="onAssignTeamsForBulk"
+      @mark-as-unread="onMarkAsUnread"
     />
     <div
       ref="conversationListRef"

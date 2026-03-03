@@ -140,6 +140,20 @@ export function useBulkActions() {
     }
   }
 
+  async function onMarkAsUnread() {
+    try {
+      await store.dispatch('bulkActions/process', {
+        type: 'Conversation',
+        ids: selectedConversations.value,
+        action_name: 'mark_as_unread',
+      });
+      store.dispatch('bulkActions/clearSelectedConversationIds');
+      useAlert(t('BULK_ACTION.MARK_AS_UNREAD.SUCCESS'));
+    } catch (err) {
+      useAlert(t('BULK_ACTION.MARK_AS_UNREAD.FAILED'));
+    }
+  }
+
   async function onUpdateConversations(status, snoozedUntil) {
     let conversationIds = selectedConversations.value;
     let skippedCount = 0;
@@ -214,5 +228,6 @@ export function useBulkActions() {
     onRemoveLabels,
     onAssignTeamsForBulk,
     onUpdateConversations,
+    onMarkAsUnread,
   };
 }
