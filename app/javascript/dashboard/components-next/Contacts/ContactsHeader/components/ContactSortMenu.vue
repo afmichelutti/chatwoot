@@ -8,7 +8,7 @@ import SelectMenu from 'dashboard/components-next/selectmenu/SelectMenu.vue';
 const props = defineProps({
   activeSort: {
     type: String,
-    default: 'last_activity_at',
+    default: 'name',
   },
   activeOrdering: {
     type: String,
@@ -42,10 +42,6 @@ const sortMenus = [
   {
     label: t('CONTACTS_LAYOUT.HEADER.ACTIONS.SORT_BY.OPTIONS.CITY'),
     value: 'city',
-  },
-  {
-    label: t('CONTACTS_LAYOUT.HEADER.ACTIONS.SORT_BY.OPTIONS.LAST_ACTIVITY'),
-    value: 'last_activity_at',
   },
   {
     label: t('CONTACTS_LAYOUT.HEADER.ACTIONS.SORT_BY.OPTIONS.CREATED_AT'),
