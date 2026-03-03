@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 Phase: 1 of 3 (Merge) — COMPLETE
 Plan: 3 of 3 in current phase — COMPLETE (all 3 plans finished)
 Status: Phase 1 complete — ready for Phase 2 (Security Audit)
-Last activity: 2026-03-03 - Completed quick task 1: Fix conversation lock to be per-inbox instead of platform-wide
+Last activity: 2026-03-03 - Completed quick task 2: Fix active blocking per inbox (operator-reply lock, contact sort, bulk unread)
 
 Progress: [████░░░░░░] 33% (Phase 1 complete: 3/3 plans, 3 phases total)
 
@@ -65,9 +65,10 @@ Progress: [████░░░░░░] 33% (Phase 1 complete: 3/3 plans, 3 p
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 1 | Fix conversation lock to be per-inbox instead of platform-wide | 2026-03-03 | abfe25ac9 | [1-fix-conversation-lock-to-be-per-inbox-in](./quick/1-fix-conversation-lock-to-be-per-inbox-in/) |
+| 2 | Operator-reply lock, alphabetical contact sort, bulk mark-as-unread | 2026-03-03 | 362a66a6f | [2-fix-active-blocking-per-inbox-message-so](./quick/2-fix-active-blocking-per-inbox-message-so/) |
 
 ## Session Continuity
 
-Last session: 2026-02-21 (Plan 01-03 completion)
-Stopped at: Phase 1 complete — all 3 plans finished. Phase 2 (Security Audit) ready to begin.
+Last session: 2026-03-03 (Quick task 2 completion)
+Stopped at: Quick task 2 complete — operator-reply lock, contact sort defaults, bulk mark-as-unread done.
 Resume file: None
