@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-21)
 Phase: 1 of 3 (Merge) — COMPLETE
 Plan: 3 of 3 in current phase — COMPLETE (all 3 plans finished)
 Status: Phase 1 complete — ready for Phase 2 (Security Audit)
-Last activity: 2026-02-21 — Plan 01-03 complete: user approved boot verification (branding, presence toggle, WhatsApp config, green colors all confirmed)
+Last activity: 2026-03-03 - Completed quick task 1: Fix conversation lock to be per-inbox instead of platform-wide
 
 Progress: [████░░░░░░] 33% (Phase 1 complete: 3/3 plans, 3 phases total)
 
@@ -59,6 +59,12 @@ Progress: [████░░░░░░] 33% (Phase 1 complete: 3/3 plans, 3 p
 - [Phase 2] PermissionFilterService gap: only filters by inbox membership, not team membership — must be extended to match Pundit's team_access? check
 - [Dev env] lint-staged not in PATH — pre-commit hook fails; use --no-verify for merge commits or install lint-staged
 - [Dev env] WSL Ubuntu requires Node.js for ExecJS (rails commands) — installed nodejs 18.19.1 via apt as part of Plan 03
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 1 | Fix conversation lock to be per-inbox instead of platform-wide | 2026-03-03 | abfe25ac9 | [1-fix-conversation-lock-to-be-per-inbox-in](./quick/1-fix-conversation-lock-to-be-per-inbox-in/) |
 
 ## Session Continuity
 
