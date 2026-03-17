@@ -25,9 +25,14 @@ incompatível com Ruby 3.4 / Rails 7.x nesta versão.
 |---|-----------|----------|--------|
 | 1 | `20250416182131` FlipChatwootV4DefaultFeatureFlag | `account.enable_features!` → `save` → validação falha | **FIX NECESSÁRIO** |
 | 2 | `20250421085134` UpdateAutoResolveToMminutes | `account.save!` → potencial falha | **PASSOU SEM FIX** (captain_models era blank) |
+| 3 | `20260225120000` AddAutoAssignOnReplyToInboxes | Migration custom não roda se imagem Docker não inclui o arquivo | **FIX NECESSÁRIO** |
 
-Na prática, apenas o Fix 1 foi necessário. O Fix 2 está documentado como contingência
+Na prática, Fix 1 e Fix 3 são obrigatórios. O Fix 2 está documentado como contingência
 caso falhe em outro ambiente com dados diferentes.
+
+> **CRÍTICO (Fix 3):** Sem a coluna `auto_assign_on_reply`, o endpoint `GET /api/v1/accounts/:id/inboxes`
+> retorna **500 Internal Server Error** e TODAS as inboxes desaparecem da UI. O erro no log é:
+> `ActionView::Template::Error (undefined method 'auto_assign_on_reply' for an instance of Inbox)`
 
 ## Solução: Aplicar via SQL + marcar como migradas
 
@@ -103,9 +108,35 @@ docker exec -it <CONTAINER_ID> bundle exec rails runner "
 "
 ```
 
-### Passo 3: Rodar as migrations restantes
+### Passo 3: Fix da Migration 20260225120000 (auto_assign_on_reply - CUSTOM)
 
-Depois de aplicar os 2 fixes acima, rodar novamente:
+Esta é uma migration **custom** (não existe no Chatwoot upstream) que adiciona a coluna
+`auto_assign_on_reply` à tabela `inboxes`. Se a imagem Docker foi buildada sem este arquivo
+de migration, a coluna não será criada mas o código (jbuilder) já a referencia, causando
+**500 em toda listagem de inboxes** (as inboxes "somem" da UI).
+
+**Aplicar via SQL direto no Postgres:**
+
+```bash
+docker exec postgres psql -U <USUARIO> -d <DATABASE> \
+  -c "ALTER TABLE inboxes ADD COLUMN IF NOT EXISTS auto_assign_on_reply BOOLEAN NOT NULL DEFAULT TRUE;"
+```
+
+Ou via DBeaver/qualquer client SQL:
+
+```sql
+ALTER TABLE inboxes ADD COLUMN IF NOT EXISTS auto_assign_on_reply BOOLEAN NOT NULL DEFAULT TRUE;
+```
+
+Depois marcar como executada:
+
+```sql
+INSERT INTO schema_migrations (version) VALUES ('20260225120000') ON CONFLICT DO NOTHING;
+```
+
+### Passo 4: Rodar as migrations restantes
+
+Depois de aplicar os 3 fixes acima, rodar novamente:
 
 ```bash
 docker exec -it <CONTAINER_ID> bundle exec rails db:migrate
@@ -166,25 +197,47 @@ ActiveRecord::Base.connection.execute(\"INSERT INTO schema_migrations (version) 
 puts 'Fix 2 OK'
 "
 
-# 4. Rodar migrations restantes
+# 4. Fix 3: coluna auto_assign_on_reply (migration custom 20260225120000)
+bundle exec rails runner "
+ActiveRecord::Base.connection.execute(\"ALTER TABLE inboxes ADD COLUMN IF NOT EXISTS auto_assign_on_reply BOOLEAN NOT NULL DEFAULT TRUE\")
+ActiveRecord::Base.connection.execute(\"INSERT INTO schema_migrations (version) VALUES ('20260225120000') ON CONFLICT DO NOTHING\")
+puts 'Fix 3 OK'
+"
+
+# 5. Rodar migrations restantes
 bundle exec rails db:migrate
 
-# 5. Verificar
+# 6. Verificar
 bundle exec rails db:migrate:status | grep down
 ```
 
 ## Resultado do Sandbox (2026-02-26)
 
 - **~70+ migrations** executadas com sucesso (3.5.2 → 4.11.1)
-- **Apenas Fix 1** foi necessário (feature flag chatwoot_v4 via SQL bitmask)
+- **Fix 1** foi necessário (feature flag chatwoot_v4 via SQL bitmask)
 - Fix 2 (auto_resolve) **NÃO foi necessário** — passou automaticamente
+- **Fix 3** foi necessário (coluna `auto_assign_on_reply` — migration custom ausente na imagem)
 - Tempo total de migração: ~10 segundos (após Fix 1)
+
+## Bug Encontrado: Inboxes Desaparecem (2026-03-02)
+
+**Sintoma:** Após migração, todas as inboxes somem da UI (Settings > Inboxes vazio).
+
+**Causa:** A migration custom `20260225120000_add_auto_assign_on_reply_to_inboxes` não rodou.
+O jbuilder `_inbox.json.jbuilder:14` tenta acessar `resource.auto_assign_on_reply` que não
+existe, gerando `500 Internal Server Error` no `GET /api/v1/accounts/:id/inboxes`.
+
+**Fix:** Aplicar Fix 3 acima (ALTER TABLE + INSERT schema_migrations).
+
+**Prevenção:** Garantir que TODAS as migrations custom estão incluídas na imagem Docker
+antes de fazer deploy. Verificar com `bundle exec rails db:migrate:status | grep down`.
 
 ## Notas para Migração em Produção
 
 - Este mesmo procedimento se aplica ao migrar a produção de 3.5.2 para 4.11.1
 - Fazer backup COMPLETO do database antes de iniciar
 - **OBRIGATÓRIO:** Aplicar Fix 1 antes de rodar `db:migrate`
+- **OBRIGATÓRIO:** Aplicar Fix 3 se a migration custom não estiver na imagem Docker
 - Fix 2 pode ser necessário dependendo dos dados (manter como contingência)
 - Testar todo o procedimento no sandbox primeiro
 - Bug de compatibilidade Ruby 3.4 no Chatwoot (captain_featurable.rb)

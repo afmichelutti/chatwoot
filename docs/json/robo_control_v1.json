@@ -1,0 +1,395 @@
+{
+  "name": "robo_control_v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "9cc6977d-e5cb-4dbb-aa9e-fe82dd10073d",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        320,
+        384
+      ],
+      "id": "876b0e2d-8420-47d0-9717-c5d2c7ca78a8",
+      "name": "Webhook",
+      "webhookId": "9cc6977d-e5cb-4dbb-aa9e-fe82dd10073d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://flowise.appio.com.br/api/v1/prediction/fe98141e-f3fb-4014-82ea-59e4295b9485",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question\": \"{{ $json.body.conversation.messages[0].content.trim().replaceAll('\\n', '\\\\n').replace(/\"/g, '\\\\\"') }}\",\n  \"overrideConfig\": {\n    \"sessionId\": \"{{ $('Webhook').item.json.body.conversation.meta.sender.phone_number.replace('+55', '') + '|' + $('Webhook').item.json.body.conversation.id }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "af43f7ed-f64c-46be-9750-b390d69876c0",
+      "name": "Envia ao Flowise texto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        384
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://chat.appio.com.br/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/messages",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "content",
+              "value": "={{ $('Envia ao Flowise texto').item.json.text.replace(/\"/g, '\\\\\"').trim() }}"
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "api_access_token",
+              "value": "=DJV65yjVXPu32j7sXCJAhyW1"
+            }
+          ]
+        }
+      },
+      "name": "Chatwoot Registra Texto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        384
+      ],
+      "id": "6ab1475a-d7f1-4f89-a0ca-1e680e006aed",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96e514fb-9eef-4718-8399-d0f7ecfce3e1",
+              "leftValue": "={{ $json.body.message_type }}",
+              "rightValue": "incoming",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "8348160b-efde-4438-9b8d-bc54536cbef5",
+              "leftValue": "={{ $json.body.conversation.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        384
+      ],
+      "id": "3a3e7b1f-76a4-48cd-bc30-b4a81cb62e2e",
+      "name": "Verifica Entrada / Pendente"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.conversation.messages[0].attachments }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "9ffe3d4a-5ba8-4152-a22a-f364aae9014b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "aea0094d-5353-4a61-ac4f-2b45e116d3d4",
+                    "leftValue": "={{ $json.body.conversation.messages[0].content }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        368
+      ],
+      "id": "a1a85146-bf3c-434e-8e3a-8109e4fcbe8d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "id": "7b1d3205-21d6-4ff6-ba72-48e1ba3d7dd1",
+      "name": "OpenAIAudio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.3,
+      "position": [
+        1248,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "eVBA3oBQGQ4IvWWP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.conversation.messages[0].attachments[0].data_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        208
+      ],
+      "id": "d2823ebb-8225-4717-88f3-fc64959871d2",
+      "name": "Baixa Arquivo",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://flowise.appio.com.br/api/v1/prediction/fe98141e-f3fb-4014-82ea-59e4295b9485",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question\": \"{{ $json.text }}\",\n  \"overrideConfig\": {\n    \"sessionId\": \"{{ $('Webhook').item.json.body.conversation.meta.sender.phone_number.replace('+55', '') + '|' + $('Webhook').item.json.body.conversation.id }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "10f9ebe3-4e35-4c70-819d-f76b00ca42de",
+      "name": "Envia ao Flowise Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        208
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://chat.appio.com.br/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/messages",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "content",
+              "value": "={{ $('Envia ao Flowise Audio').item.json.text.replace(/\"/g, '\\\\\"').trim() }}"
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "api_access_token",
+              "value": "=DJV65yjVXPu32j7sXCJAhyW1"
+            }
+          ]
+        }
+      },
+      "name": "Chatwoot Registra Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        208
+      ],
+      "id": "558a0b39-731e-4301-b8ba-b8c56cf8fac6",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## Atualizar\n\n\"{{ $('Webhook').item.json.body.conversation.meta.sender.phone_number.replace('+55', '') + '|' + $('Webhook').item.json.body.conversation.id }}\"",
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "863b7008-981c-40fd-ab96-3c729da873db",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verifica Entrada / Pendente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia ao Flowise texto": {
+      "main": [
+        [
+          {
+            "node": "Chatwoot Registra Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica Entrada / Pendente": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Baixa Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envia ao Flowise texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAIAudio": {
+      "main": [
+        [
+          {
+            "node": "Envia ao Flowise Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa Arquivo": {
+      "main": [
+        [
+          {
+            "node": "OpenAIAudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia ao Flowise Audio": {
+      "main": [
+        [
+          {
+            "node": "Chatwoot Registra Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ebe5d01f-e9fb-4ed6-92ef-1d2c4b01bda8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6288df56b8d88f9534f9e3598895bea5ffc79e6f2c3a8a48e7123acc8be14a38"
+  },
+  "id": "jXf5v78OyIsrPFxi",
+  "tags": []
+}
