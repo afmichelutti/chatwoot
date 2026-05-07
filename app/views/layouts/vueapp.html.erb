@@ -5,11 +5,35 @@
       <%= @global_config['INSTALLATION_NAME'] %>
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0"/>
+
+    <%# === SEO + Social previews (always rendered, outside DISPLAY_MANIFEST) === %>
+    <meta name="description" content="Centralize WhatsApp, Instagram, Telegram e e-mail. Automatize campanhas, atenda em massa e venda mais com a API oficial do WhatsApp.">
+    <meta name="theme-color" content="#34AA8E">
+
+    <%# Open Graph (WhatsApp, Facebook, LinkedIn, iMessage, Telegram) %>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Appio">
+    <meta property="og:title" content="Appio — WhatsApp e atendimento omnichannel para empresas">
+    <meta property="og:description" content="Centralize WhatsApp, Instagram, Telegram e e-mail. Automatize campanhas, atenda em massa e venda mais com a API oficial do WhatsApp.">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:image" content="<%= request.base_url %>/brand-assets/og-image.jpg">
+    <meta property="og:image:secure_url" content="<%= request.base_url %>/brand-assets/og-image.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Appio — atendimento omnichannel para WhatsApp">
+
+    <%# Twitter / X %>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Appio — WhatsApp e atendimento omnichannel para empresas">
+    <meta name="twitter:description" content="Centralize WhatsApp, Instagram, Telegram e e-mail. Automatize campanhas, atenda em massa e venda mais com a API oficial do WhatsApp.">
+    <meta name="twitter:image" content="<%= request.base_url %>/brand-assets/og-image.jpg">
+    <meta name="twitter:image:alt" content="Appio — atendimento omnichannel para WhatsApp">
+
     <% if @global_config['DISPLAY_MANIFEST'] %>
-      <meta name="msapplication-TileColor" content="#1f93ff">
+      <meta name="msapplication-TileColor" content="#34AA8E">
       <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
-      <meta name="theme-color" content="#1f93ff">
-      <meta name="description" content="<%= @global_config['INSTALLATION_NAME'] %> é uma plataforma de atendimento ao cliente que centraliza conversas de WhatsApp, Instagram, Telegram, e-mail e outros canais em um só lugar. Gerencie sua equipe, automatize respostas e acompanhe o desempenho em tempo real.">
       <% if ENV['IOS_APP_IDENTIFIER'].present? %>
         <meta name="apple-itunes-app" content='app-id=<%= ENV['IOS_APP_IDENTIFIER'] %>'>
       <% end %>
@@ -23,6 +47,7 @@
       <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
       <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
       <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+      <link class="favicon" rel="icon" type="image/svg+xml" href="<%= @global_config['LOGO_THUMBNAIL'] %>">
       <link class="favicon" rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
       <link class="favicon" rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
       <link class="favicon" rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">

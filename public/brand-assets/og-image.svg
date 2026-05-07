@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" version="1.1">
+  <title>Appio — Atendimento omnichannel para WhatsApp</title>
+
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EDF7F8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F58220"/>
+      <stop offset="33%" stop-color="#E63E5C"/>
+      <stop offset="66%" stop-color="#34AA8E"/>
+      <stop offset="100%" stop-color="#2CB5D6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Top accent bar (brand colors) -->
+  <rect x="0" y="0" width="1200" height="8" fill="url(#accent)"/>
+
+  <!-- Bubble cluster (left side, vertically centered) -->
+  <g fill="none" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" transform="translate(80 175)">
+    <g stroke="#34AA8E" transform="rotate(-6 200 92)">
+      <path d="M 162 43 H 312 Q 328 43 328 59 V 127 Q 328 143 312 143 H 284 L 277 161 L 269 143 H 162 Q 146 143 146 127 V 59 Q 146 43 162 43 Z"/>
+    </g>
+    <g stroke="#F58220" transform="rotate(-4 118 182)">
+      <path d="M 38 107 H 199 Q 215 107 215 123 V 220 Q 215 236 199 236 H 102 L 75 271 L 82 236 H 38 Q 22 236 22 220 V 123 Q 22 107 38 107 Z"/>
+    </g>
+    <g stroke="#E63E5C" transform="rotate(2 182 123)">
+      <path d="M 113 65 H 258 Q 274 65 274 81 V 162 Q 274 178 258 178 H 148 L 127 198 L 137 178 H 113 Q 97 178 97 162 V 81 Q 97 65 113 65 Z"/>
+    </g>
+    <g stroke="#2CB5D6" transform="rotate(4 290 173)">
+      <path d="M 226 96 H 376 Q 392 96 392 112 V 224 Q 392 240 376 240 H 346 L 376 277 L 314 240 H 226 Q 210 240 210 224 V 112 Q 210 96 226 96 Z"/>
+    </g>
+  </g>
+
+  <!-- Wordmark "Appio" -->
+  <text x="540" y="290"
+        font-family="'Arial Black', 'Helvetica Neue', system-ui, sans-serif"
+        font-weight="900" font-size="160" letter-spacing="-4" fill="#141414">Appio</text>
+
+  <!-- Tagline line 1 -->
+  <text x="540" y="365"
+        font-family="'Helvetica Neue', Arial, system-ui, sans-serif"
+        font-weight="600" font-size="30" fill="#34AA8E">WhatsApp e atendimento omnichannel</text>
+
+  <!-- Tagline line 2 -->
+  <text x="540" y="410"
+        font-family="'Helvetica Neue', Arial, system-ui, sans-serif"
+        font-weight="400" font-size="26" fill="#555555">Centralize, automatize e venda mais.</text>
+
+  <!-- URL footer -->
+  <text x="540" y="510"
+        font-family="'Helvetica Neue', Arial, system-ui, sans-serif"
+        font-weight="600" font-size="22" fill="#888888" letter-spacing="2">BOT.APPIO.COM.BR</text>
+
+  <!-- Bottom accent dots (decorative) -->
+  <g transform="translate(540 540)">
+    <circle cx="0" cy="0" r="6" fill="#F58220"/>
+    <circle cx="20" cy="0" r="6" fill="#E63E5C"/>
+    <circle cx="40" cy="0" r="6" fill="#34AA8E"/>
+    <circle cx="60" cy="0" r="6" fill="#2CB5D6"/>
+  </g>
+</svg>

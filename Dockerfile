@@ -1,4 +1,4 @@
-FROM chatwoot/chatwoot:v4.11.1
+FROM chatwoot/chatwoot:v4.13.0
 
 # instala o nodejs e o yarn para que possamos recompilar os assets do rails
 RUN apk update && apk add --no-cache \
@@ -53,5 +53,5 @@ RUN SECRET_KEY_BASE=precompile_placeholder RAILS_ENV=production bundle exec rake
 RUN SECRET_KEY_BASE=precompile_placeholder RAILS_ENV=production bundle exec rake assets:precompile
 
 
-####  docker build --no-cache -t afmichelutti/omniflex_cw_4111 .
-####  docker push afmichelutti/omniflex_cw_4111
+####  docker build --no-cache -t afmichelutti/appio_cw_4130:cliente .
+####  docker push afmichelutti/appio_cw_4130:cliente

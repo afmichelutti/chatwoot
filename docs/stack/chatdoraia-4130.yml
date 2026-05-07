@@ -1,0 +1,222 @@
+version: "3.7"
+
+##############
+#
+# Plataforma v4.13.0 - DORAIA (cliente novo, banco zerado)
+#
+# Antes de fazer deploy:
+#   1. Imagem já buildada e pushada como afmichelutti/appio_cw_4130:cliente
+#   2. DNS chat.doraia.com.br apontando pro IP da VPS
+#   3. Criar database vazio:
+#        docker exec postgres psql -U postgres -c "CREATE DATABASE chat;"
+#   4. Bucket MinIO 'doraia' criado + service account com read/write
+#   5. SECRET_KEY_BASE: openssl rand -hex 64
+#   6. Configurar env vars no Portainer (prefixo CLI_*)
+#   7. Deploy stack
+#   8. PRIMEIRA EXECUÇÃO — rodar migrations (uma vez):
+#        docker exec $(docker ps -q -f name=chatdoraia_web) bundle exec rails db:migrate
+#   9. Criar super admin:
+#        docker exec -it $(docker ps -q -f name=chatdoraia_web) bundle exec rails c
+#        SuperAdmin.create!(email: 'admin@doraia.com', password: 'XXXXX', confirmed_at: Time.now)
+#
+##############
+
+services:
+
+  # ============================================
+  # Redis exclusivo do Doraia
+  # ============================================
+  chatdoraia_redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - network_public
+    volumes:
+      - chatdoraia_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 384M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ============================================
+  # Plataforma v4.13.0 - Web Server (Rails)
+  # ============================================
+  chatdoraia_web:
+    image: afmichelutti/appio_cw_4130:cliente
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    entrypoint: docker/entrypoints/rails.sh
+
+    volumes:
+      - chatdoraia_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Configuração Básica =====
+      - INSTALLATION_NAME=${CLI_INSTALLATION_NAME:-Doraia Plataforma}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${CLI_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chat.doraia.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+      - ENABLE_ACCOUNT_SIGNUP=false
+
+      # ===== Redis (exclusivo do Doraia) =====
+      - REDIS_URL=redis://chatdoraia_redis:6379/1
+
+      # ===== PostgreSQL (mesmo servidor, database NOVO) =====
+      - POSTGRES_HOST=${CLI_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${CLI_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${CLI_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${CLI_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat
+
+      # ===== MinIO (S3-compatible) Storage =====
+      - ACTIVE_STORAGE_SERVICE=s3_compatible
+      - STORAGE_ACCESS_KEY_ID=${CLI_STORAGE_ACCESS_KEY_ID}
+      - STORAGE_SECRET_ACCESS_KEY=${CLI_STORAGE_SECRET_ACCESS_KEY}
+      - STORAGE_REGION=${CLI_STORAGE_REGION:-us-east-1}
+      - STORAGE_BUCKET_NAME=${CLI_STORAGE_BUCKET_NAME}
+      - STORAGE_ENDPOINT=${CLI_STORAGE_ENDPOINT}
+      - STORAGE_FORCE_PATH_STYLE=true
+
+      # ===== SMTP Email =====
+      - MAILER_SENDER_EMAIL=${CLI_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${CLI_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${CLI_SMTP_PORT:-587}
+      - SMTP_USERNAME=${CLI_SMTP_USERNAME}
+      - SMTP_PASSWORD=${CLI_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${CLI_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Performance =====
+      - WEB_CONCURRENCY=2
+      - RAILS_MAX_THREADS=5
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
+      labels:
+        # Traefik
+        - traefik.enable=true
+        - traefik.http.routers.chatdoraia.rule=Host(`chat.doraia.com.br`)
+        - traefik.http.routers.chatdoraia.entrypoints=websecure
+        - traefik.http.routers.chatdoraia.tls.certresolver=letsencrypt
+        - traefik.http.routers.chatdoraia.service=chatdoraia
+        - traefik.http.services.chatdoraia.loadbalancer.server.port=3000
+        - traefik.http.services.chatdoraia.loadbalancer.passhostheader=true
+        # SSL & WebSocket Headers
+        - traefik.http.middlewares.sslheader_doraia.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.chatdoraia.middlewares=sslheader_doraia
+
+  # ============================================
+  # Plataforma v4.13.0 - Sidekiq (Background Jobs)
+  # ============================================
+  chatdoraia_sidekiq:
+    image: afmichelutti/appio_cw_4130:cliente
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+    volumes:
+      - chatdoraia_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Mesmas variáveis do web =====
+      - INSTALLATION_NAME=${CLI_INSTALLATION_NAME:-Doraia Plataforma}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${CLI_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chat.doraia.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+
+      # ===== Redis =====
+      - REDIS_URL=redis://chatdoraia_redis:6379/1
+
+      # ===== PostgreSQL =====
+      - POSTGRES_HOST=${CLI_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${CLI_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${CLI_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${CLI_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat
+
+      # ===== MinIO (S3-compatible) =====
+      - ACTIVE_STORAGE_SERVICE=s3_compatible
+      - STORAGE_ACCESS_KEY_ID=${CLI_STORAGE_ACCESS_KEY_ID}
+      - STORAGE_SECRET_ACCESS_KEY=${CLI_STORAGE_SECRET_ACCESS_KEY}
+      - STORAGE_REGION=${CLI_STORAGE_REGION:-us-east-1}
+      - STORAGE_BUCKET_NAME=${CLI_STORAGE_BUCKET_NAME}
+      - STORAGE_ENDPOINT=${CLI_STORAGE_ENDPOINT}
+      - STORAGE_FORCE_PATH_STYLE=true
+
+      # ===== SMTP =====
+      - MAILER_SENDER_EMAIL=${CLI_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${CLI_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${CLI_SMTP_PORT:-587}
+      - SMTP_USERNAME=${CLI_SMTP_USERNAME}
+      - SMTP_PASSWORD=${CLI_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${CLI_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Sidekiq Performance =====
+      - SIDEKIQ_CONCURRENCY=10
+      - RAILS_MAX_THREADS=10
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+# ============================================
+# Volumes & Networks
+# ============================================
+volumes:
+  chatdoraia_data:
+    driver: local
+  chatdoraia_redis_data:
+    driver: local
+
+networks:
+  network_public:
+    external: true
+    name: network_public

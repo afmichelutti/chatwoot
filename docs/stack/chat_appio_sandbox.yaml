@@ -21,7 +21,8 @@ services:
   # ============================================
   chatwoot_sandbox_redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy
+      allkeys-lru
     restart: unless-stopped
     networks:
       - network_public
@@ -40,7 +41,7 @@ services:
   # Chatwoot Sandbox - Web Server (Rails)
   # ============================================
   chatwoot_sandbox:
-    image: afmichelutti/appio_cw_4111
+    image: afmichelutti/omniflex_cw_4111:appio
     command: bundle exec rails s -p 3000 -b 0.0.0.0
     entrypoint: docker/entrypoints/rails.sh
 
@@ -115,19 +116,19 @@ services:
         - traefik.enable=true
         - traefik.http.routers.chatwoot_sandbox.rule=Host(`chatsandbox.appio.com.br`)
         - traefik.http.routers.chatwoot_sandbox.entrypoints=websecure
-        - traefik.http.routers.chatwoot_sandbox.tls.certresolver=letsencrypt
+        - traefik.http.routers.chatwoot_sandbox.tls.certresolver=letsencryptresolver
         - traefik.http.routers.chatwoot_sandbox.service=chatwoot_sandbox
         - traefik.http.services.chatwoot_sandbox.loadbalancer.server.port=3000
         - traefik.http.services.chatwoot_sandbox.loadbalancer.passhostheader=true
         # SSL & WebSocket Headers
         - traefik.http.middlewares.sslheader_sandbox.headers.customrequestheaders.X-Forwarded-Proto=https
-        - traefik.http.routers.chatwoot_sandbox.middlewares=sslheader_sandbox
+        - traefik.http.routers.chatwoot_sandbox.middlewares=sslheader_sandbox@docker
 
   # ============================================
   # Chatwoot Sandbox - Sidekiq (Background Jobs)
   # ============================================
   chatwoot_sandbox_sidekiq:
-    image: afmichelutti/appio_cw_4111
+    image: afmichelutti/omniflex_cw_4111:appio
     command: bundle exec sidekiq -C config/sidekiq.yml
 
     volumes:

@@ -1,0 +1,229 @@
+version: "3.7"
+
+##############
+#
+# Chatwoot v4.13.0 - Stack para CLIENTE NOVO (banco zerado)
+#
+# Diferenças vs sandbox 4.11.1:
+#   - Imagem nova (precisa buildar e pushar): afmichelutti/appio_cw_4130:<TAG>
+#   - Banco NOVO (não restaura dump): db:chatwoot_prepare cria schema do zero
+#   - Sem playbook de migration (não é upgrade, é install fresh)
+#
+# Antes de fazer deploy:
+#   1. Buildar imagem v4.13.0:
+#        docker build -t afmichelutti/appio_cw_4130:<CLIENTE> .
+#        docker push afmichelutti/appio_cw_4130:<CLIENTE>
+#   2. Apontar DNS chat<CLIENTE>.appio.com.br para o IP da VPS
+#   3. Criar database vazio:
+#        docker exec postgres psql -U <user> -c "CREATE DATABASE chat_<CLIENTE>;"
+#   4. Gerar SECRET_KEY_BASE: openssl rand -hex 64
+#   5. Configurar env vars no Portainer (prefixo CLI_*)
+#   6. Deploy stack
+#   7. PRIMEIRA EXECUÇÃO — rodar setup do banco (uma vez):
+#        docker exec <container_web> bundle exec rails db:chatwoot_prepare
+#      OU (alternativa, mais lenta mas garante migrations custom como auto_assign_on_reply):
+#        docker exec <container_web> bundle exec rails db:create db:migrate
+#   8. Criar super admin: docker exec -it <container_web> bundle exec rails c
+#        SuperAdmin.create!(email: 'admin@cliente.com', password: 'XXXXX', confirmed_at: Time.now)
+#
+##############
+
+services:
+
+  # ============================================
+  # Redis exclusivo do Cliente
+  # ============================================
+  chatwoot_cli_redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - network_public
+    volumes:
+      - chatwoot_cli_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 384M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ============================================
+  # Chatwoot v4.13.0 - Web Server (Rails)
+  # ============================================
+  chatwoot_cli:
+    image: afmichelutti/appio_cw_4130:cliente
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    entrypoint: docker/entrypoints/rails.sh
+
+    volumes:
+      - chatwoot_cli_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Configuração Básica =====
+      - INSTALLATION_NAME=${CLI_INSTALLATION_NAME:-Cliente Chatwoot}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${CLI_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chatcliente.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+      - ENABLE_ACCOUNT_SIGNUP=false
+
+      # ===== Redis (exclusivo do Cliente) =====
+      - REDIS_URL=redis://chatwoot_cli_redis:6379/1
+
+      # ===== PostgreSQL (mesmo servidor, database NOVO) =====
+      - POSTGRES_HOST=${CLI_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${CLI_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${CLI_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${CLI_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_cliente
+
+      # ===== MinIO (S3-compatible) Storage =====
+      - ACTIVE_STORAGE_SERVICE=s3_compatible
+      - STORAGE_ACCESS_KEY_ID=${CLI_STORAGE_ACCESS_KEY_ID}
+      - STORAGE_SECRET_ACCESS_KEY=${CLI_STORAGE_SECRET_ACCESS_KEY}
+      - STORAGE_REGION=${CLI_STORAGE_REGION:-us-east-1}
+      - STORAGE_BUCKET_NAME=${CLI_STORAGE_BUCKET_NAME}
+      - STORAGE_ENDPOINT=${CLI_STORAGE_ENDPOINT}
+      - STORAGE_FORCE_PATH_STYLE=true
+
+      # ===== SMTP Email =====
+      - MAILER_SENDER_EMAIL=${CLI_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${CLI_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${CLI_SMTP_PORT:-587}
+      - SMTP_USERNAME=${CLI_SMTP_USERNAME}
+      - SMTP_PASSWORD=${CLI_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${CLI_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Performance =====
+      - WEB_CONCURRENCY=2
+      - RAILS_MAX_THREADS=5
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
+      labels:
+        # Traefik
+        - traefik.enable=true
+        - traefik.http.routers.chatwoot_cli.rule=Host(`chatcliente.appio.com.br`)
+        - traefik.http.routers.chatwoot_cli.entrypoints=websecure
+        - traefik.http.routers.chatwoot_cli.tls.certresolver=letsencrypt
+        - traefik.http.routers.chatwoot_cli.service=chatwoot_cli
+        - traefik.http.services.chatwoot_cli.loadbalancer.server.port=3000
+        - traefik.http.services.chatwoot_cli.loadbalancer.passhostheader=true
+        # SSL & WebSocket Headers
+        - traefik.http.middlewares.sslheader_cli.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.chatwoot_cli.middlewares=sslheader_cli
+
+  # ============================================
+  # Chatwoot v4.13.0 - Sidekiq (Background Jobs)
+  # ============================================
+  chatwoot_cli_sidekiq:
+    image: afmichelutti/appio_cw_4130:cliente
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+    volumes:
+      - chatwoot_cli_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Mesmas variáveis do web =====
+      - INSTALLATION_NAME=${CLI_INSTALLATION_NAME:-Cliente Chatwoot}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${CLI_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chatcliente.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+
+      # ===== Redis =====
+      - REDIS_URL=redis://chatwoot_cli_redis:6379/1
+
+      # ===== PostgreSQL =====
+      - POSTGRES_HOST=${CLI_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${CLI_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${CLI_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${CLI_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_cliente
+
+      # ===== MinIO (S3-compatible) =====
+      - ACTIVE_STORAGE_SERVICE=s3_compatible
+      - STORAGE_ACCESS_KEY_ID=${CLI_STORAGE_ACCESS_KEY_ID}
+      - STORAGE_SECRET_ACCESS_KEY=${CLI_STORAGE_SECRET_ACCESS_KEY}
+      - STORAGE_REGION=${CLI_STORAGE_REGION:-us-east-1}
+      - STORAGE_BUCKET_NAME=${CLI_STORAGE_BUCKET_NAME}
+      - STORAGE_ENDPOINT=${CLI_STORAGE_ENDPOINT}
+      - STORAGE_FORCE_PATH_STYLE=true
+
+      # ===== SMTP =====
+      - MAILER_SENDER_EMAIL=${CLI_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${CLI_SMTP_ADDRESS:-smtp.sendgrid.net}
+      - SMTP_PORT=${CLI_SMTP_PORT:-587}
+      - SMTP_USERNAME=${CLI_SMTP_USERNAME}
+      - SMTP_PASSWORD=${CLI_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${CLI_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+
+      # ===== Sidekiq Performance =====
+      - SIDEKIQ_CONCURRENCY=10
+      - RAILS_MAX_THREADS=10
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+# ============================================
+# Volumes & Networks
+# ============================================
+volumes:
+  chatwoot_cli_data:
+    driver: local
+  chatwoot_cli_redis_data:
+    driver: local
+
+networks:
+  network_public:
+    external: true
+    name: network_public

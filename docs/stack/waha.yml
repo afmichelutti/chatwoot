@@ -1,0 +1,124 @@
+version: '3.7'
+
+##############
+#
+# WAHA (WhatsApp HTTP API) - devlikeapro/waha-plus
+#
+# Antes de subir esta stack:
+#   1. Login no Docker Hub (necessário pra puxar a imagem waha-plus):
+#        docker login -u devlikeapro -p SEU_DOCKER_HUB_KEY
+#      (key vem do Patron Portal depois da doação)
+#   2. DNS waha.appio.com.br apontando pro IP da VPS
+#   3. Volumes externos já criados:
+#        docker volume create waha_sessions
+#        docker volume create waha_media
+#        docker volume create redis_waha_data
+#   4. Cadastrar env vars no Portainer (prefixo WAHA_*) — ver waha.env
+#
+# Correções aplicadas vs versão antiga:
+#   - certresolver: letsencryptresolver → letsencrypt (nome correto no Traefik)
+#   - Secrets movidos pra env vars (não hardcoded no yaml)
+#
+##############
+
+services:
+
+  redis_waha:
+    image: redis:alpine
+    restart: always
+    networks:
+      - network_public
+    command: >
+      redis-server --port 6379 --appendonly yes
+    volumes:
+      - redis_waha_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  waha:
+    image: devlikeapro/waha-plus:latest
+    restart: always
+    networks:
+      - network_public
+    volumes:
+      - waha_sessions:/app/.sessions
+      - waha_media:/app/.media
+    environment:
+      - TZ=America/Sao_Paulo
+
+      # ===== AUTENTICAÇÃO =====
+      - WHATSAPP_API_KEY=${WAHA_API_KEY}
+      - WAHA_DASHBOARD_ENABLED=true
+      - WAHA_DASHBOARD_USERNAME=${WAHA_DASHBOARD_USERNAME:-admin}
+      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD}
+      - WHATSAPP_SWAGGER_ENABLED=true
+      - WHATSAPP_SWAGGER_USERNAME=${WAHA_SWAGGER_USERNAME:-admin}
+      - WHATSAPP_SWAGGER_PASSWORD=${WAHA_SWAGGER_PASSWORD}
+
+      # ===== ENGINE =====
+      # NOWEB: leve, sem navegador, ideal pra produção (recomendado)
+      # WEBJS: usa puppeteer, mais features mas mais pesado
+      - WHATSAPP_DEFAULT_ENGINE=NOWEB
+
+      # ===== ARMAZENAMENTO DE SESSÕES =====
+      - WHATSAPP_SESSIONS_FOLDER=/app/.sessions
+      - WHATSAPP_FILES_FOLDER=/app/.media
+      - WHATSAPP_FILES_LIFETIME=180   # minutos antes de limpar mídia
+      - WHATSAPP_DOWNLOAD_MEDIA=true
+
+      # ===== AUTO-INICIALIZAÇÃO =====
+      # Ao reiniciar o container, sessões salvas voltam automaticamente
+      - WAHA_PRINT_QR=false
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
+      - WHATSAPP_START_SESSION=
+
+      # ===== PROXY ISP (Bright Data — opcional, descomentar se usar) =====
+      # Pra produção recomendo configurar por sessão via API em vez de global.
+      # - WHATSAPP_PROXY_SERVER=brd.superproxy.io:33335
+      # - WHATSAPP_PROXY_SERVER_USERNAME=${WAHA_PROXY_USERNAME}
+      # - WHATSAPP_PROXY_SERVER_PASSWORD=${WAHA_PROXY_PASSWORD}
+
+      # ===== LOGS =====
+      - WAHA_LOG_LEVEL=info
+      - WAHA_LOG_FORMAT=JSON
+
+      # ===== WEBHOOKS GLOBAIS (opcional — descomentar se usar) =====
+      # - WHATSAPP_HOOK_URL=${WAHA_HOOK_URL}
+      # - WHATSAPP_HOOK_EVENTS=message,session.status
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.waha.rule=Host(`waha.appio.com.br`)
+        - traefik.http.routers.waha.entrypoints=websecure
+        - traefik.http.routers.waha.tls.certresolver=letsencrypt
+        - traefik.http.routers.waha.priority=1
+        - traefik.http.routers.waha.service=waha
+        - traefik.http.services.waha.loadbalancer.server.port=3000
+        - traefik.http.services.waha.loadbalancer.passHostHeader=true
+
+volumes:
+  waha_sessions:
+    external: true
+    name: waha_sessions
+
+  waha_media:
+    external: true
+    name: waha_media
+
+  redis_waha_data:
+    external: true
+    name: redis_waha_data
+
+networks:
+  network_public:
+    external: true
+    name: network_public

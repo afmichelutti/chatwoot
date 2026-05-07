@@ -1,0 +1,222 @@
+version: "3.7"
+
+##############
+#
+# Chatwoot Appio 4.11.1 - Stack OFICIAL de produção
+# Database: chat_appio
+# E-mail: AWS SES
+#
+# Deploy:
+#   1. Criar database: docker exec postgres psql -U <user> -c "CREATE DATABASE chat_appio;"
+#   2. Restaurar dump (se for migração): docker exec postgres pg_restore -U <user> -d chat_appio /tmp/<backup>.dump
+#   3. Deploy stack no Portainer
+#   4. Rodar migrations: docker exec <container_appio> bundle exec rails db:chatwoot_prepare
+#
+# AWS SES - antes do deploy:
+#   - Verificar domínio remetente no console SES (DKIM + SPF + DMARC)
+#   - Sair do sandbox SES (solicitar production access) p/ enviar a qualquer destinatário
+#   - Gerar credenciais SMTP do SES (NÃO é a mesma access key do S3)
+#     Console SES → SMTP Settings → Create SMTP Credentials
+#
+##############
+
+services:
+
+  # ============================================
+  # Redis exclusivo do Appio
+  # ============================================
+  chatwoot_appio_redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy
+      allkeys-lru
+    restart: unless-stopped
+    networks:
+      - network_public
+    volumes:
+      - chatwoot_appio_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ============================================
+  # Chatwoot Appio - Web Server (Rails)
+  # ============================================
+  chatwoot_appio:
+    image: afmichelutti/appio_cw_4111:appio
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+    entrypoint: docker/entrypoints/rails.sh
+
+    volumes:
+      - chatwoot_appio_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Configuração Básica =====
+      - INSTALLATION_NAME=${APP_INSTALLATION_NAME:-Appio}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${APP_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chat.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+      - ENABLE_ACCOUNT_SIGNUP=false
+
+      # ===== Redis =====
+      - REDIS_URL=redis://chatwoot_appio_redis:6379/1
+
+      # ===== PostgreSQL =====
+      - POSTGRES_HOST=${APP_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${APP_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${APP_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${APP_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_appio
+
+      # ===== AWS S3 Storage =====
+      - ACTIVE_STORAGE_SERVICE=amazon
+      - AWS_ACCESS_KEY_ID=${APP_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${APP_AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${APP_AWS_REGION:-sa-east-1}
+      - S3_BUCKET_NAME=${APP_S3_BUCKET_NAME}
+
+      # ===== AWS SES (e-mail transacional) =====
+      # SMTP_USERNAME / SMTP_PASSWORD são as credenciais SMTP do SES,
+      # NÃO a access key do S3. Geradas em SES Console → SMTP Settings.
+      - MAILER_SENDER_EMAIL=${APP_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${APP_SMTP_ADDRESS:-email-smtp.sa-east-1.amazonaws.com}
+      - SMTP_PORT=${APP_SMTP_PORT:-587}
+      - SMTP_USERNAME=${APP_SES_SMTP_USERNAME}
+      - SMTP_PASSWORD=${APP_SES_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${APP_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=login
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_OPENSSL_VERIFY_MODE=peer
+
+      # ===== Performance =====
+      - WEB_CONCURRENCY=2
+      - RAILS_MAX_THREADS=5
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 1024M
+      labels:
+        # Traefik Configuration
+        - traefik.enable=true
+        - traefik.http.routers.chatwoot_appio.rule=Host(`chat.appio.com.br`)
+        - traefik.http.routers.chatwoot_appio.entrypoints=websecure
+        - traefik.http.routers.chatwoot_appio.tls.certresolver=letsencrypt
+        - traefik.http.routers.chatwoot_appio.service=chatwoot_appio
+        - traefik.http.services.chatwoot_appio.loadbalancer.server.port=3000
+        - traefik.http.services.chatwoot_appio.loadbalancer.passhostheader=true
+        # SSL & WebSocket Headers
+        - traefik.http.middlewares.sslheader_appio.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.chatwoot_appio.middlewares=sslheader_appio
+
+  # ============================================
+  # Chatwoot Appio - Sidekiq (Background Jobs)
+  # ============================================
+  chatwoot_appio_sidekiq:
+    image: afmichelutti/appio_cw_4111:appio
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+    volumes:
+      - chatwoot_appio_data:/app/storage
+
+    networks:
+      - network_public
+
+    environment:
+      # ===== Mesmas variáveis do web =====
+      - INSTALLATION_NAME=${APP_INSTALLATION_NAME:-Appio}
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - SECRET_KEY_BASE=${APP_SECRET_KEY_BASE}
+      - FRONTEND_URL=https://chat.appio.com.br
+      - DEFAULT_LOCALE=pt_BR
+      - FORCE_SSL=true
+
+      # ===== Redis =====
+      - REDIS_URL=redis://chatwoot_appio_redis:6379/1
+
+      # ===== PostgreSQL =====
+      - POSTGRES_HOST=${APP_POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${APP_POSTGRES_PORT:-5432}
+      - POSTGRES_USERNAME=${APP_POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${APP_POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=chat_appio
+
+      # ===== AWS S3 =====
+      - ACTIVE_STORAGE_SERVICE=amazon
+      - AWS_ACCESS_KEY_ID=${APP_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${APP_AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${APP_AWS_REGION:-sa-east-1}
+      - S3_BUCKET_NAME=${APP_S3_BUCKET_NAME}
+
+      # ===== AWS SES =====
+      - MAILER_SENDER_EMAIL=${APP_MAILER_SENDER_EMAIL}
+      - SMTP_ADDRESS=${APP_SMTP_ADDRESS:-email-smtp.sa-east-1.amazonaws.com}
+      - SMTP_PORT=${APP_SMTP_PORT:-587}
+      - SMTP_USERNAME=${APP_SES_SMTP_USERNAME}
+      - SMTP_PASSWORD=${APP_SES_SMTP_PASSWORD}
+      - SMTP_DOMAIN=${APP_SMTP_DOMAIN}
+      - SMTP_AUTHENTICATION=login
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_OPENSSL_VERIFY_MODE=peer
+
+      # ===== Sidekiq Performance =====
+      - SIDEKIQ_CONCURRENCY=10
+      - RAILS_MAX_THREADS=10
+
+      # ===== Logs =====
+      - RAILS_LOG_TO_STDOUT=true
+      - USE_INBOX_AVATAR_FOR_BOT=true
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+# ============================================
+# Volumes & Networks
+# ============================================
+volumes:
+  chatwoot_appio_data:
+    driver: local
+  chatwoot_appio_redis_data:
+    driver: local
+
+networks:
+  network_public:
+    external: true
+    name: network_public

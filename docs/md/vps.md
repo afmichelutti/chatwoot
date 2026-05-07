@@ -283,13 +283,13 @@ entrypoint: docker/entrypoints/rails.sh
         - traefik.enable=true
         - traefik.http.routers.chatwoot_admin.rule=Host(`${CW_DOMAIN}`)
         - traefik.http.routers.chatwoot_admin.entrypoints=websecure
-        - traefik.http.routers.chatwoot_admin.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.chatwoot_admin.tls.certresolver=letsencrypt
         - traefik.http.routers.chatwoot_admin.service=chatwoot_admin
         - traefik.http.services.chatwoot_admin.loadbalancer.server.port=3000
         - traefik.http.services.chatwoot_admin.loadbalancer.passhostheader=true
         # SSL & WebSocket Headers
         - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
-        - traefik.http.routers.chatwoot_admin.middlewares=sslheader@docker
+        - traefik.http.routers.chatwoot_admin.middlewares=sslheader
 
 # ============================================
 

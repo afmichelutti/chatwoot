@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="512px" height="512px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 59.1 (86144) - https://sketch.com -->
-    <title>woot-log</title>
-    <desc>Created with Sketch.</desc>
-    <g id="Logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="woot-log" fill-rule="nonzero">
-            <circle id="Oval" fill="#47A7F6" cx="256" cy="256" r="256"></circle>
-            <path d="M362.807947,368.807947 L244.122956,368.807947 C178.699407,368.807947 125.456954,315.561812 125.456954,250.12177 C125.456954,184.703089 178.699407,131.456954 244.124143,131.456954 C309.565494,131.456954 362.807947,184.703089 362.807947,250.12177 L362.807947,368.807947 Z" id="Fill-1" stroke="#FFFFFF" stroke-width="6" fill="#FFFFFF"></path>
-        </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" version="1.1">
+  <title>Appio</title>
+  <g fill="none" stroke-width="22" stroke-linejoin="round" stroke-linecap="round" transform="translate(50 90)">
+    <!-- Teal bubble (back) -->
+    <g stroke="#34AA8E" transform="rotate(-6 220 100)">
+      <path d="M 178 47 H 343 Q 361 47 361 65 V 140 Q 361 158 343 158 H 312 L 305 177 L 295 158 H 178 Q 160 158 160 140 V 65 Q 160 47 178 47 Z"/>
     </g>
+    <!-- Orange bubble -->
+    <g stroke="#F58220" transform="rotate(-4 130 200)">
+      <path d="M 41 118 H 219 Q 237 118 237 136 V 243 Q 237 261 219 261 H 112 L 82 299 L 90 261 H 41 Q 23 261 23 243 V 136 Q 23 118 41 118 Z"/>
+    </g>
+    <!-- Pink/Red bubble -->
+    <g stroke="#E63E5C" transform="rotate(2 200 135)">
+      <path d="M 124 71 H 284 Q 302 71 302 89 V 178 Q 302 196 284 196 H 163 L 139 218 L 151 196 H 124 Q 106 196 106 178 V 89 Q 106 71 124 71 Z"/>
+    </g>
+    <!-- Cyan bubble (front) -->
+    <g stroke="#2CB5D6" transform="rotate(4 320 190)">
+      <path d="M 248 106 H 414 Q 432 106 432 124 V 246 Q 432 264 414 264 H 380 L 414 305 L 345 264 H 248 Q 230 264 230 246 V 124 Q 230 106 248 106 Z"/>
+    </g>
+  </g>
 </svg>
