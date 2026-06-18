@@ -1,0 +1,961 @@
+{
+  "version": 1,
+  "exported_at": "2026-05-09T17:19:18.267Z",
+  "milestones": [
+    {
+      "id": "M001",
+      "title": "CRM core + Kanban integrado às conversas",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-05-09T15:05:22.373Z",
+      "completed_at": null,
+      "vision": "Toda nova conversa inbound aparece como card num Kanban CRM dentro do Chatwoot. Agente arrasta entre stages, abre o card e responde a conversa real no mesmo drawer, fecha como ganho ou perdido. Tudo é aditivo ao schema upstream — zero ALTER em tabelas existentes.",
+      "success_criteria": [
+        "Mensagem inbound em conta com CRM ligado e strategy=first_contact cria Deal automaticamente apenas para contatos sem deal aberto, e o card aparece no Kanban em <1s para outros browsers conectados.",
+        "Agente arrasta card entre stages e a mudança persiste, recomputa weighted_value, registra DealActivity system, e propaga via ActionCable.",
+        "Drawer abre clicando no card, mostra tabs Conversa (reusando ConversationView do Chatwoot) / Atividades / Notas / Histórico, e botões Mark Won / Mark Lost funcionam end-to-end.",
+        "rake crm:backfill_deals[account_id] cria deals em batches de 500 para conversations existentes sem duplicar; reexecução é no-op.",
+        "GET /api/v2/health/crm responde 200 com default_pipeline_present=true em conta seedada e 503 quando não há default pipeline.",
+        "Auditoria de migrations confirma zero ALTER/remove em colunas de conversations/contacts/users/accounts/inboxes/teams/messages."
+      ],
+      "key_risks": [
+        {
+          "risk": "Sobreposição com automation/atribuição/realtime existentes do Chatwoot",
+          "whyItMatters": "Caminho B depende de reusar AutomationRule, round_robin_handler e ActionCable. Se descobrirmos no S07/S08 que não dá pra reusar limpo, escopo do M1 estoura."
+        },
+        {
+          "risk": "F1 (auto-create) corre dentro do MessageCreatedListener — extender sem quebrar fluxos existentes",
+          "whyItMatters": "MessageCreatedListener é caminho crítico do Chatwoot. Bug ali derruba inbox inteiro, não só o CRM."
+        },
+        {
+          "risk": "Posição decimal fracionária + race condition em drag-drop simultâneo",
+          "whyItMatters": "Dois agentes movendo o mesmo card pode pular automations ou virar weighted_value errado. Advisory lock por deal_id no S04 retira."
+        },
+        {
+          "risk": "Reuso do ConversationView no drawer pode forçar mudanças invasivas no componente",
+          "whyItMatters": "Se o componente não for reutilizável out-of-the-box, S08 vira mini-rewrite e estoura prazo."
+        },
+        {
+          "risk": "Backfill em conta com 100k+ conversations",
+          "whyItMatters": "Batch errado derruba DB ou estoura sidekiq. Batches de 500 + pause precisam ser provados em ambiente realista, não só com seed."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Reuso de mecanismos existentes do Chatwoot",
+          "retireIn": "S07",
+          "whatWillBeProven": "Kanban realtime usando ActionCable do Chatwoot funciona com 100 cards em dois browsers; nenhum motor paralelo foi construído."
+        },
+        {
+          "riskOrUnknown": "Extensão segura do MessageCreatedListener",
+          "retireIn": "S03",
+          "whatWillBeProven": "Specs do MessageCreatedListener existente continuam verdes + spec novo cobre F1 nas três strategies; canal whatsapp e website ainda criam conversations normalmente."
+        },
+        {
+          "riskOrUnknown": "Race condition em drag-drop simultâneo",
+          "retireIn": "S04",
+          "whatWillBeProven": "Spec concorrente: dois threads chamando /move ao mesmo tempo no mesmo deal serializam via advisory lock e weighted_value final é consistente."
+        },
+        {
+          "riskOrUnknown": "Reuso do ConversationView no drawer",
+          "retireIn": "S08",
+          "whatWillBeProven": "Drawer renderiza ConversationView sem patch invasivo; mensagens inbound/outbound funcionam dentro do drawer."
+        },
+        {
+          "riskOrUnknown": "Backfill em volume",
+          "retireIn": "S09",
+          "whatWillBeProven": "Backfill em fixture com 5k conversations completa em batches sem timeout; reexecução é no-op verificada por count."
+        }
+      ],
+      "verification_contract": "RSpec model + request + policy specs cobrindo migrations, validações, endpoints §6.1/§6.2/§6.3/§6.4/§6.6, Pundit policies. Vitest cobrindo Vuex modules e composables. Spec do listener F1 cobrindo as três strategies. Spec concorrente cobrindo race condition em /move.",
+      "verification_integration": "Sistema spec end-to-end cobrindo F1 (mensagem inbound cria deal), F2 (drag-drop), F4 (criar atividade), F5 (close won/lost). Verificação ActionCable real entre dois clientes.",
+      "verification_operational": "rake crm:backfill_deals em conta seed de 1k conversations; idempotência confirmada via 2ª execução. GET /api/v2/health/crm em estado ok e estado degradado (default pipeline ausente).",
+      "verification_uat": "Beta privado em 1-2 tenants reais: validar que agente consegue trabalhar 1 dia inteiro só pelo CRM sem voltar pro Inbox legado; validar que admin consegue criar pipeline novo from_template e arquivar antigo.",
+      "definition_of_done": [
+        "Todas as 9 slices completas com checkbox marcado.",
+        "Todos os endpoints listados em S02/S03/S04/S05 respondem conforme schema da spec.",
+        "Sidebar exibe entry CRM; navegação /crm/pipelines/:id renderiza Kanban; click em card abre drawer funcional.",
+        "Migrations rodadas com sucesso em ambiente de staging via bundle exec rails db:migrate; rollback funciona slice a slice.",
+        "Backfill validado em conta beta com volume realista (>1k conversations).",
+        "Health endpoint integrado com monitoring existente do fork.",
+        "Beta privado aceito por pelo menos 1 tenant interno: 1 semana de uso real sem incidente bloqueante.",
+        "Lint (rubocop + eslint) limpo nos arquivos novos/alterados; coverage mínimo do AGENTS.md respeitado nos services e jobs."
+      ],
+      "requirement_coverage": "- Covers: R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011\n- Partially covers: nenhum\n- Leaves for later: M002 cobre AI enrichment, automation engine, ListView, Timeline, Forecast, companies, custom fields completos, supervisor role, pipeline privado, DealProducts, bulk endpoints, templates extras\n- Orphan risks: nenhum no escopo do M1",
+      "boundary_map_markdown": "### S01 → todas\n\nProduces:\n- Tabelas: pipelines, pipeline_stages, deals, lost_reasons, deal_activities, conversation_ai_enrichments (vazia, M2 preenche).\n- Models Rails com associações: Pipeline, PipelineStage, Deal (1:1 conversation via unique index), LostReason, DealActivity, ConversationAiEnrichment.\n- Concerns aditivos em Conversation/Contact/User (has_one/has_many) carregados via prepend_mod_with onde necessário (Enterprise overlay considerado).\n- Seeder Seeders::CrmTemplateSeeder ativando o template sales-generic em código.\n\nConsumes:\n- nothing (slice 1)\n\n### S02 → S03/S04/S05/S08\n\nProduces:\n- Endpoints REST: /pipelines (CRUD + from_template + duplicate + archive), /pipelines/:id/stages (CRUD + reorder), /lost_reasons (CRUD).\n- Pundit policies: PipelinePolicy, PipelineStagePolicy, LostReasonPolicy.\n- Serializer JSON estável para Pipeline/Stage/LostReason.\n\nConsumes:\n- Models de S01.\n\n### S03 → S04/S07/S08\n\nProduces:\n- Endpoints REST: /deals (lista com filtros, show, create, update, delete soft).\n- DealPolicy.\n- F1 implementada em listener Chatwoot extendido com strategy first_contact|always|manual lendo account.settings.crm.auto_create_deal_strategy.\n- Health endpoint stub /api/v2/health/crm reportando default_pipeline_present.\n- Account model extendido com helper default_pipeline.\n\nConsumes:\n- Pipelines/stages/lost_reasons API (S02).\n\n### S04 → S07/S08\n\nProduces:\n- Endpoints REST: PATCH /deals/:id/move, POST /deals/:id/close, POST /deals/:id/reopen.\n- Advisory lock por deal_id em /move.\n- Recompute de weighted_value via callback Rails.\n- DealActivity kind=system para audit de mudanças (stage/status/owner/value).\n- Webhook + broadcast disparados por job assíncrono (não no caminho HTTP da resposta).\n\nConsumes:\n- Deals API (S03), DealActivity model (S01).\n\n### S05 → S08\n\nProduces:\n- Endpoints REST: /deal_activities (lista filtrada por deal_id, CRUD, complete, snooze).\n- DealActivityPolicy.\n- ActivityReminderJob (cron) com resolução simples de reminder_at.\n\nConsumes:\n- DealActivity model (S01), Deal API (S03).\n\n### S06 → S07/S08\n\nProduces:\n- Sidebar entry CRM no dashboard layout.\n- Vuex modules: crm/pipelines, crm/deals, crm/dealActivities (state, getters, mutations, actions).\n- View PipelinesIndex.vue + roteamento /crm/pipelines.\n- Composable useDealsRealtime conectado ao canal account/{id}/deals via ActionCable.\n\nConsumes:\n- Endpoints S02 + S03.\n\n### S07 → S08\n\nProduces:\n- Componentes Vue: KanbanBoard, KanbanColumn, DealCard, DealCardPreview.\n- Drag-drop integrado (vue-draggable-next ou similar) → PATCH /deals/:id/move.\n- Patches incrementais Vuex aplicados em deal.created/updated/moved/deleted.\n- View PipelineShow.vue como wrapper inicial (só Kanban no M1).\n\nConsumes:\n- Vuex + realtime de S06, endpoints de S04.\n\n### S08 → S09\n\nProduces:\n- Componente DealDetail.vue (drawer) com tabs Conversa/Atividades/Notas/Histórico.\n- Reuso do ConversationView do Chatwoot na tab Conversa.\n- Componentes auxiliares: CreateActivityDialog, CloseDealDialog, AiSummaryPanel (placeholder vazio com mensagem 'IA disponível no M2').\n- Sidebar direita do drawer com value/probability/owner/assignee/tags/due_at editáveis.\n\nConsumes:\n- Endpoints S03/S04/S05, ConversationView existente.\n\n### S09 → done\n\nProduces:\n- BackfillDealsForExistingConversationsJob com batches de 500, pause configurável, log estruturado.\n- rake task crm:backfill_deals[account_id].\n- Health endpoint final /api/v2/health/crm com payload completo.\n- Logs estruturados (deal.created/moved/won/lost, automation.* placeholders, ai.* placeholders).\n- Métricas Prometheus core (counters + histograms básicos da §13.2 reduzidos).\n- ADR sobre soft-delete TTL e advisory lock pattern.\n\nConsumes:\n- tudo de S01-S08.",
+      "sequence": 0
+    },
+    {
+      "id": "M002",
+      "title": "Visualizações extras, automação e IA",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-05-09T15:05:22.373Z",
+      "completed_at": null,
+      "vision": "Sobre a base do M001, entregar o conjunto completo da spec v1.1: as 4 visualizações (Lista/Timeline/Forecast além do Kanban), automation engine (estendendo o AutomationRule existente do Chatwoot), AI enrichment com ADR de provider, companies e custom fields completos, supervisor role, pipeline privado, DealProducts, bulk endpoints com cap, e templates extras. Ordem por risco — IA e automation engine primeiro porque carregam decisões fundadoras pendentes.",
+      "success_criteria": [
+        "AI enrichment popula ai_summary em <30s após primeira mensagem inbound em conta com IA habilitada; rate limit por account e ADR de provider em vigor.",
+        "Automation engine único (extensão do AutomationRule do Chatwoot) executa regras event→action sobre Deals; admin gerencia pelo mesmo editor das regras de Conversation.",
+        "ListView com bulk actions, sort, filter inline e export CSV cobrindo §6.3 bulk; Timeline com 3 modos (agenda/semana/mês); Forecast com KPIs + funnel + gráfico mensal.",
+        "Companies CRUD com UI; Custom fields completos por entidade (Deal/Contact/Company) substituindo ou estendendo custom_attribute_definitions conforme decisão ADR.",
+        "Supervisor role e pipeline privado (com pipeline_members) operacionais; matriz de permissões §8.2 da spec respeitada.",
+        "DealProducts CRUD; templates support-sac/retention/collections/recruiting selecionáveis em /pipelines/from_template."
+      ],
+      "key_risks": [
+        {
+          "risk": "Decisão de provider de IA + custo + LGPD bloqueia AI enrichment",
+          "whyItMatters": "§17.6 explicita que IA precisa de ADR antes de codificar. Sem decisão de provider/rate-limit/consentimento, qualquer cron de enrichment vira incidente de custo ou compliance."
+        },
+        {
+          "risk": "Estender AutomationRule do Chatwoot pode ser inviável tecnicamente",
+          "whyItMatters": "D004 aposta em estensão; se motor existente não suportar conditions/actions sobre Deal sem reescrita pesada, pode ser preciso reabrir tabela paralela e revisar D004."
+        },
+        {
+          "risk": "Custom fields paralelos vs custom_attribute_definitions existentes",
+          "whyItMatters": "§11.10 alerta sobre duas UIs conflitantes. Decidir entre substituir, estender ou conviver é cabeça-de-rato com riscos de quebra em features existentes do Chatwoot."
+        },
+        {
+          "risk": "Forecast queries em volume",
+          "whyItMatters": "§17.5 prevê p95 ruim em filtros combinados sem materialized view. Otimização pode forçar mudança de schema (índices funcionais, mview) tarde no M002."
+        },
+        {
+          "risk": "Pipeline privado quebra queries existentes",
+          "whyItMatters": "Listagens de Deal precisam respeitar pipeline_members em todo lugar; falta de scope global vaza dados entre members/non-members."
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Provider de IA + custo + LGPD",
+          "retireIn": "S01",
+          "whatWillBeProven": "ADR de provider commitada; rate limit por account funcionando; toggle account.settings.crm.ai_enabled gateando enrichment; consentimento documentado."
+        },
+        {
+          "riskOrUnknown": "Estender AutomationRule do Chatwoot",
+          "retireIn": "S02",
+          "whatWillBeProven": "Spike em S02 produz POC com pelo menos 2 conditions e 2 actions sobre Deal rodando dentro do AutomationEngine existente, sem reescrita do motor."
+        },
+        {
+          "riskOrUnknown": "Custom fields paralelos vs existentes",
+          "retireIn": "S03",
+          "whatWillBeProven": "ADR de unificação ou convivência commitada antes de qualquer migration; UI única decidida; teste de regressão em features existentes (custom_attribute_definitions de conversation/contact) verde."
+        },
+        {
+          "riskOrUnknown": "Forecast queries",
+          "retireIn": "S05",
+          "whatWillBeProven": "Forecast endpoint executa em <2s p95 com 1k deals/account em ambiente de load test; estratégia mview ou índices documentada."
+        },
+        {
+          "riskOrUnknown": "Pipeline privado quebra queries",
+          "retireIn": "S07",
+          "whatWillBeProven": "Spec multi-tenant cobrindo agent não-membro tentando ver/editar deal de pipeline privado retorna 404; nenhuma listagem padrão vaza pipelines privados."
+        }
+      ],
+      "verification_contract": "RSpec model + request + policy + service specs cobrindo automation engine, AI job, custom fields, companies, dealproducts, bulk endpoints. Vitest cobrindo ListView, Timeline (3 modos), Forecast charts.",
+      "verification_integration": "System spec end-to-end: AI gera summary real (com mock provider); automation rule move card automaticamente em event=ai_qualified; bulk move respeita cap de 500 e advisory locks. Forecast endpoint integrado com Chart.js no frontend.",
+      "verification_operational": "Load test: Forecast com 1k deals em &lt;2s p95; AI enrichment respeita rate limit por account sem stall global; bulk actions com 500 deals em 1 request termina em &lt;5s sem timeout.",
+      "verification_uat": "Tenant interno valida: gerente comercial usa Forecast diariamente sem complaint; admin cria automation rule via editor visual; CSAT do agente sobe vs M001 (questionário leve).",
+      "definition_of_done": [
+        "Todas as slices completas, ADRs de IA/automation/custom-fields commitadas em docs/adr/.",
+        "Spec do AGENTS.md respeitada (lint, style, tailwind only, branding).",
+        "Beta de M001 promovido para GA; M002 entregue como GA gradual via flipper (10% → 50% → 100%).",
+        "Coverage mínimo do AGENTS.md mantido; nenhum requirement R001-R011 regrediu.",
+        "Custos de IA dentro do orçamento disponível; alerts configurados.",
+        "Documentação user-facing publicada (help interno + se aplicável help.chatwoot.com)."
+      ],
+      "requirement_coverage": "- Covers: novos R### a serem registrados durante a abertura do M002 (AI enrichment, automation engine, ListView, Timeline, Forecast, companies, custom fields, supervisor role, pipeline privado, DealProducts, bulk endpoints)\n- Partially covers: nenhum\n- Leaves for later: email/SIP integration nativa, marketing automation, quotes/billing, mobile app, GraphQL endpoint, multi-currency com FX, BPM workflows, permissões granulares por campo\n- Orphan risks: custos de IA em escala precisam de monitoring contínuo pós-M002\n\nPré-requisito implícito: M001 entregue (caminho B) — sequência registrada em PROJECT.md.",
+      "boundary_map_markdown": "### S01 → S03+\n\nProduces:\n- ADR docs/adr/0001-ai-provider.md (Claude/OpenAI/Gemini decision, fallback, prompt template, versionamento, custo ceiling).\n- Tabela conversation_ai_enrichments preenchida; EnrichConversationWithAIJob; toggle account.settings.crm.ai_enabled.\n- Rate limiter por account (Redis) com cap diário configurável.\n- Endpoint POST /api/v2/accounts/:id/conversations/:id/enrich_ai (manual trigger).\n\nConsumes:\n- Tabela vazia + has_one association de M001/S01.\n\n### S02 → S03+\n\nProduces:\n- Extensão do AutomationEngine do Chatwoot com conditions e actions de Deal.\n- Editor visual reusando UI existente de AutomationRule.\n- ADR docs/adr/0002-automation-engine.md (extensão vs paralelo, decisão final).\n\nConsumes:\n- AutomationEngine + AutomationRule existentes do Chatwoot; modelos Deal de M001.\n\n### S03 → S04+\n\nProduces:\n- ADR docs/adr/0003-custom-fields.md.\n- Custom fields por Deal/Contact/Company com 5 tipos (text, number, date, select, boolean).\n- UI única em /admin/settings/custom-fields.\n\nConsumes:\n- Modelos Deal/Contact + (eventualmente) Company de M001/S04.\n\n### S04 → S05+\n\nProduces:\n- Tabela companies + endpoints + UI (CompaniesIndex, CompanyShow).\n- contacts.company_id (migration aditiva, opcional).\n\nConsumes:\n- Custom fields infra (S03).\n\n### S05 → done\n\nProduces:\n- ListView (DealsListView.vue) com sort, filter inline, saved views, export CSV, bulk actions.\n- Endpoints bulk com cap em 500.\n- Timeline (ActivityCalendar.vue) com 3 modos.\n- Forecast (ForecastDashboard.vue) com KPIs/funnel/monthly chart; endpoint otimizado.\n\nConsumes:\n- Backend M001 + automation S02 + AI S01.\n\n### S06 → S07\n\nProduces:\n- DealActivity expandida: kinds adicionais com subtypes.\n- Tabelas auxiliares: attendees, recurrences, attachments.\n- Endpoints subresources do §6.4 completos.\n\nConsumes:\n- DealActivity reduzida de M001/S05.\n\n### S07 → S08\n\nProduces:\n- Supervisor role no User.role enum (gated).\n- Pipeline.is_private + pipeline_members + UI de membership.\n- Matriz §8.2 enforced via Pundit; specs multi-tenant.\n\nConsumes:\n- Pipeline + Deal de M001; companies de S04.\n\n### S08 → done\n\nProduces:\n- DealProducts (CRUD + UI).\n- Templates extras: support-sac, retention-renewal, collections, recruiting.\n- Settings de pipeline expostos no UI.\n\nConsumes:\n- Tudo de M001 + slices anteriores do M002.",
+      "sequence": 0
+    },
+    {
+      "id": "M003",
+      "title": "",
+      "status": "queued",
+      "depends_on": [],
+      "created_at": "2026-05-09T15:08:15.303Z",
+      "completed_at": null,
+      "vision": "",
+      "success_criteria": [],
+      "key_risks": [],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "",
+      "boundary_map_markdown": "",
+      "sequence": 0
+    }
+  ],
+  "slices": [
+    {
+      "milestone_id": "M001",
+      "id": "S01",
+      "title": "Schema + models foundation (caminho B)",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "bundle exec rails db:migrate cria as 6 tabelas; rake task de seed cria pipeline default 'Vendas' a partir do template sales-generic em uma account de teste; specs de model passam.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Estabelecer a fundação de schema e modelos do CRM (caminho B): 6 tabelas novas puramente aditivas (pipelines, pipeline_stages, deals, lost_reasons, deal_activities, conversation_ai_enrichments), models Rails com associações e callbacks, concerns aditivos em Account/Conversation/Contact/User via prepend_mod_with, e seeder Seeders::CrmTemplateSeeder do template sales-generic. Zero ALTER em colunas existentes do Chatwoot upstream.",
+      "success_criteria": "- bundle exec rails db:migrate cria as 6 tabelas; db:rollback STEP=6 reverte limpo.\n- Specs de model passam: Pipeline (validation + default per account), PipelineStage (won XOR lost, probability range), Deal (weighted_value computed, position decimal, conversation 1:1 unique index), DealActivity (kind whitelist 4 valores), LostReason, ConversationAiEnrichment (1:1 conversation).\n- bundle exec rails runner \"Seeders::CrmTemplateSeeder.new(account: Account.first, template_key: 'sales-generic').perform!\" cria 1 pipeline default + 7 stages; reexecução é idempotente.\n- bundle exec rake crm:seed_default_pipeline[ACCOUNT_ID] funciona via CLI.\n- Grep nas migrations não encontra ALTER TABLE em conversations/contacts/users/accounts/inboxes/teams/messages: rg \"alter_table\\\\s+:(conversations|contacts|users|accounts|inboxes|teams|messages)\" db/migrate/2026* não retorna match.\n- Concerns Crm::* em Account/Conversation/Contact/User funcionam via prepend_mod_with (verificar no rails console que Account.first.pipelines responde).",
+      "proof_level": "contract",
+      "integration_closure": "Upstream consumido: Account, Conversation, Contact, User (associações via concern). prepend_mod_with mantém compat com Enterprise overlay. Hookups novos: nada de runtime ainda — esta slice é foundation. Resta antes de end-to-end: API REST (S02/S03), F1 listener (S03), drag-drop+close (S04), frontend (S06-S08).",
+      "observability_impact": "Migrations são idempotentes via Rails versioning. Models incluem timestamps e (onde aplicável) deleted_at para soft-delete. Seeder retorna struct {pipeline:, stages:} para auditoria. Logs de seeder usam Rails.logger.info com tag [CrmTemplateSeeder] para grep.",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S02",
+      "title": "Pipelines, stages e lost_reasons REST API + policies",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "curl POST /api/v2/accounts/:id/pipelines/from_template { template_key:'sales-generic' } retorna pipeline com 7 stages; PATCH /pipeline_stages/:id reordena; agente recebe 403 ao tentar criar pipeline (admin only).",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Expor CRUD de pipelines, stages e lost_reasons via REST. Pundit policies para enforcement de admin-only nas operações de configuração. Serializer JSON estável que o frontend vai consumir.",
+      "success_criteria": "Request specs passam para todos os endpoints §6.1, §6.2 e §6.6. Policy specs cobrem agent vs admin. Cross-account 404 verificado. Reorder mantém positions densas.",
+      "proof_level": "contract (request specs + policy specs)",
+      "integration_closure": "Endpoints integrados ao roteador api/v2 do Chatwoot via routes adicionais; Pundit no AccountsController hierarchy; responde com formato JSON consistente com serializers existentes do Chatwoot.",
+      "observability_impact": "Logs default Rails de request; sem instrumentação custom ainda — adicionada em S09.",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S03",
+      "title": "Deals API + F1 auto-create configurável",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S02"
+      ],
+      "demo": "Mensagem inbound numa conversa nova de uma account com strategy=first_contact cria deal automaticamente; segunda mensagem do mesmo contato não cria outro; /api/v2/health/crm responde 200 com default_pipeline_present=true.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Implementar fluxo F1 com strategy configurável (first_contact default), endpoints CRUD de Deal, e health endpoint stub. Extender MessageCreatedListener sem quebrar comportamento existente do Chatwoot.",
+      "success_criteria": "Specs do MessageCreatedListener original continuam verdes. Spec novo cobre F1 nas 3 strategies (first_contact, always, manual) e idempotência sob retry. Endpoints /deals respondem com filtros. Health endpoint reporta default_pipeline_present.",
+      "proof_level": "contract + integration (request specs + listener spec real, sem mock do Conversation)",
+      "integration_closure": "Hook ao MessageCreatedListener via include_mod_with; account.settings.crm.auto_create_deal_strategy lido com fallback first_contact; falha de criação de deal não derruba criação da conversation (rescued + logged).",
+      "observability_impact": "Log estruturado event=deal.created com source=auto_create|manual_api e strategy=...; counter crm_deals_created_total{source,strategy}; falhas logam event=deal.create_failed com erro.",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S04",
+      "title": "F2 drag-drop + F5 close/reopen com audit e advisory lock",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S03"
+      ],
+      "demo": "PATCH /deals/:id/move muda stage e position, recomputa weighted_value, cria DealActivity system. Spec concorrente prova advisory lock (dois threads serializam). POST /deals/:id/close { status:'lost', lost_reason_id } move pra stage lost.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Endpoints /move, /close, /reopen com integridade transacional, advisory lock por deal_id, e disparos assíncronos para webhook + broadcast (resposta HTTP rápida).",
+      "success_criteria": "Spec concorrente passa (dois threads, mesmo deal). Spec de close lost exige lost_reason_id (422 sem ele). Reopen restaura status='open' e move para previous stage via última DealActivity system kind=stage_changed. Webhook fica em sidekiq job, não no path HTTP.",
+      "proof_level": "contract + integration (specs concorrentes + verificação de jobs Sidekiq enfileirados)",
+      "integration_closure": "Webhook usa WebhookListener existente; broadcast usa ActionCable existente — verificado que canais propagam via spec ou test manual descrito em S07.",
+      "observability_impact": "Logs event=deal.moved/won/lost com from_stage/to_stage, deal_id, account_id; counter crm_deals_moved_total{from_stage,to_stage}, crm_deals_won_total, crm_deals_lost_total{reason}.",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S05",
+      "title": "Deal activities reduzidas (task/note/system/event)",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S03"
+      ],
+      "demo": "POST /deal_activities { kind:'task', deal_id, scheduled_at, reminder_at } cria atividade; POST /:id/complete marca completed e ActivityReminderJob (rodado em test mode) dispara reminder no horário.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "CRUD de DealActivity com 4 kinds, snooze/complete, e job único de reminder. Sem attendees, recurrence, parent_activity ou multi-reminder.",
+      "success_criteria": "Endpoints §6.4 reduzidos passam request specs. Validação rejeita kinds fora do enum {task, note, system, event}. ActivityReminderJob spec confirma trigger no horário e log estruturado.",
+      "proof_level": "contract (request specs + job spec)",
+      "integration_closure": "Job enfileirado via Sidekiq cron existente; logs convivem com sidekiq logger do Chatwoot.",
+      "observability_impact": "Log event=activity.created/completed/snoozed; counter crm_activities_total{kind,status}.",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S06",
+      "title": "Frontend foundation: sidebar, store, pipelines list, realtime composable",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S02"
+      ],
+      "demo": "Logado no Chatwoot, sidebar mostra entry 'CRM'; clicando navega pra /crm/pipelines onde lista de pipelines da account aparece (vazia ok); ActionCable conecta no canal account/{id}/deals (verificado em network tab).",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Toda a base de frontend reutilizável pelas slices de Kanban e drawer: sidebar entry, Vuex modules, composable useDealsRealtime, view de listagem.",
+      "success_criteria": "Vitest specs dos Vuex modules passam. PipelinesIndex.vue renderiza lista a partir do store. useDealsRealtime aplica patches mock corretamente. Lint eslint limpo.",
+      "proof_level": "contract (vitest unit + manual smoke navegação)",
+      "integration_closure": "Sidebar entry usa o sistema de feature flag existente (account.settings.features.crm); roteamento integrado ao vue-router do dashboard.",
+      "observability_impact": "Sem instrumentação backend; frontend usa console.warn em falhas de WS para diagnóstico durante dev.",
+      "sequence": 6,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S07",
+      "title": "Kanban board: KanbanBoard + DealCard + drag-drop com realtime",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S04",
+        "S06"
+      ],
+      "demo": "Em /crm/pipelines/:id, board renderiza colunas por stage com cards; arrastar card chama PATCH /deals/:id/move e card permanece na nova posição; em segundo browser, card aparece movido em <1s sem refetch.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Componentes Kanban funcionais com drag-drop e realtime. Esta é a slice que retira o risco principal (reuso do ActionCable + drag-drop fluido).",
+      "success_criteria": "Vitest specs cobrem KanbanColumn render, DealCard render, e mutation patches via composable. Smoke manual em dois browsers prova propagação. Performance: 100 cards renderizam em <500ms (medido em vitest perf test).",
+      "proof_level": "contract (vitest) + UAT (smoke manual entre dois browsers documentado em S01-UAT.md futura)",
+      "integration_closure": "PATCH move integrado real com backend; realtime via canal account/{id}/deals integrado real com ActionCable.",
+      "observability_impact": "Frontend logs warn em falhas de move (rollback otimista visível). Backend já cobre métricas de move em S04.",
+      "sequence": 7,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S08",
+      "title": "Deal drawer: tabs Conversa/Atividades/Notas/Histórico + Mark Won/Lost",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S05",
+        "S07"
+      ],
+      "demo": "Click no DealCard abre drawer; tab Conversa renderiza ConversationView do Chatwoot funcional (envia/recebe msg); tab Atividades cria task; tab Histórico mostra system events; botão Mark Lost abre dialog com lost_reason e fecha.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Drawer completo do M1 com integração das 4 tabs. Esta é a slice que retira o risco de reuso do ConversationView. Placeholder visível 'IA disponível no M2' na tab Resumo IA.",
+      "success_criteria": "Specs vitest dos componentes passam. Smoke manual confirma: enviar mensagem na tab Conversa funciona; criar atividade na tab Atividades aparece imediatamente; Mark Won/Lost altera status visível em todos os browsers via realtime.",
+      "proof_level": "contract (vitest) + UAT (smoke manual fluxo F2/F4/F5 ponta-a-ponta documentado)",
+      "integration_closure": "ConversationView reusado sem patch; CloseDealDialog dispara POST /deals/:id/close real; estados sincronizados com Vuex store; drawer fecha com Esc e click fora.",
+      "observability_impact": "Sem instrumentação adicional — backend já cobre eventos de estado.",
+      "sequence": 8,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S09",
+      "title": "Backfill, health endpoint completo, observabilidade core e ADR",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S08"
+      ],
+      "demo": "Em fixture com 5k conversations, rake crm:backfill_deals[1] termina sem timeout, segunda execução é no-op. /api/v2/health/crm responde 200 quando ok e 503 quando default pipeline ausente. /metrics expõe contadores crm_*.",
+      "created_at": "2026-05-09T15:10:43.060Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Hardening operacional: backfill em volume, health endpoint final, logs estruturados completos, métricas core Prometheus, ADRs sobre advisory lock pattern e soft-delete TTL.",
+      "success_criteria": "Backfill spec roda fixture grande sob 60s. Health endpoint cobre 4 estados (ok, sem default pipeline, backfill pendente, automation engine down — placeholder). Métricas registradas verificadas via /metrics. ADRs commitadas em docs/adr/.",
+      "proof_level": "operational (job spec real com grande fixture + health endpoint specs + manual /metrics inspection)",
+      "integration_closure": "Backfill integrado ao runbook de ativação de CRM por account; health endpoint integrado ao monitoring existente do fork (chatwoot health dashboard).",
+      "observability_impact": "Esta slice é o output principal de observabilidade do M1. Adiciona logs estruturados padronizados, counters por evento, histograms de duração de move e backfill, e gauges de pipeline_open_value.",
+      "sequence": 9,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S01",
+      "title": "AI enrichment + ADR de provider + rate limiter por account",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "Em conta com ai_enabled=true, mensagem inbound dispara EnrichConversationWithAIJob; em <30s, conversation_ai_enrichments tem ai_summary populado; rate limiter bloqueia acima do cap diário com log estruturado e fallback gracioso.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Retirar o risco fundador da IA: decidir provider via ADR, implementar enrichment job, rate limit por account, toggle de ativação, e fallback quando provider está down. IA fica desligada por default; tenant ativa explicitamente.",
+      "success_criteria": "ADR provider commitada. Job spec passa com mock provider. Rate limiter spec confirma cap diário. Toggle gateia execução. Fallback (provider down) loga e segue sem travar fluxo.",
+      "proof_level": "contract + integration + operational (RSpec + load test básico de rate limit)",
+      "integration_closure": "Job ligado ao MessageCreatedListener via include_mod_with com toggle; usa TenantAIConfig (ou equivalente) para credenciais; logs convivem com sidekiq logger.",
+      "observability_impact": "Adiciona logs ai.enrichment_started/completed/failed/rate_limited; counter crm_ai_enrichments_total{result, provider}; histogram crm_ai_enrichment_duration_seconds; gauge crm_ai_rate_limit_remaining{account_id}.",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S02",
+      "title": "Automation engine: estender AutomationRule do Chatwoot para Deal",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Admin cria via editor existente regra event=ai_qualified → action=move_to_stage(qualificado); mensagem inbound qualificada pela IA move card automaticamente em <2s.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Provar que estender o motor existente é viável (D004). Adicionar conditions e actions sobre Deal, sem motor paralelo. ADR de decisão final commitada.",
+      "success_criteria": "Spike de extensão produz POC com 2 conditions + 2 actions sobre Deal. Specs do AutomationEngine existente continuam verdes. Editor visual reusado sem mudança invasiva. ADR commitada.",
+      "proof_level": "contract + integration",
+      "integration_closure": "AutomationEngine existente do Chatwoot ganha registry de DealConditionEvaluator + DealActionExecutor via DI/registry pattern; eventos Deal.* registrados como triggers.",
+      "observability_impact": "Counter crm_automations_executed_total{event,action}; logs automation.matched/executed/failed.",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S03",
+      "title": "Custom fields completos com ADR de unificação",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S02"
+      ],
+      "demo": "Admin cria custom field 'budget' (number) escopado a Deal; UI única em /admin/settings/custom-fields lista todos os campos por entidade; PATCH /deals/:id { custom_fields: { budget: 5000 } } persiste e retorna no GET.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Resolver o conflito §11.10 com decisão final via ADR. Implementar caminho escolhido (substituir/estender/conviver). 5 tipos reduzidos: text, number, date, select, boolean.",
+      "success_criteria": "ADR commitada. Specs cobrem CRUD de custom_fields por entidade. Specs de regressão cobrem custom_attribute_definitions existentes (zero quebra). UI única.",
+      "proof_level": "contract + integration",
+      "integration_closure": "Caminho decidido na ADR é implementado consistentemente em backend + frontend; migrations afetam apenas tabelas pertinentes à decisão.",
+      "observability_impact": "Logs custom_field.created/updated; sem métricas específicas.",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S04",
+      "title": "Companies: modelo, endpoints e UI",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S03"
+      ],
+      "demo": "Admin cria company via /companies; contact ganha company_id; CompaniesIndex.vue lista companies, CompanyShow.vue mostra deals/contacts/activities; merge funciona via POST /:id/merge.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Adicionar entidade Company com CRUD, merge, e UI dedicada. contacts.company_id opcional via migration aditiva.",
+      "success_criteria": "Endpoints §6.5 passam request specs. Merge spec cobre cascata correta. UI lista, mostra detalhe, edita. Custom fields de Company funcionam.",
+      "proof_level": "contract + integration",
+      "integration_closure": "Drawer de Deal exibe link pra Company; busca global indexa companies (Searchkick existente do Chatwoot ou similar).",
+      "observability_impact": "Logs company.created/updated/merged; counter crm_companies_merged_total.",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S05",
+      "title": "ListView + Timeline + Forecast (3 visualizações)",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S04"
+      ],
+      "demo": "Switcher Kanban/Lista/Timeline/Forecast no header funciona; ListView com bulk move; Timeline mostra atividades em modos agenda/semana/mês; Forecast carrega em <2s com 1k deals.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Entregar as 3 visualizações restantes da spec. Bulk endpoints com cap 500. Forecast otimizado (mview ou índices conforme load test).",
+      "success_criteria": "Vitest specs cobrem cada visualização. Bulk endpoints com cap 500 spec'ed. Load test prova Forecast <2s p95 com 1k deals. Saved views por usuário funcionam.",
+      "proof_level": "contract + integration + operational (load test do Forecast)",
+      "integration_closure": "Switcher integrado a /crm/pipelines/:id; saved views persistem em Pipeline.settings.user_views; export CSV usa endpoint existente do Chatwoot ou novo dedicado.",
+      "observability_impact": "Histogram crm_pipeline_load_duration_seconds{view}; counter crm_bulk_operations_total{action}; alertas para Forecast >2s p95.",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S06",
+      "title": "Deal activities completas (kinds expandidos, attendees, recurrence, attachments)",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S05"
+      ],
+      "demo": "Agendar reunião (kind=meeting) com 2 attendees + recurrência semanal; reminder dispara nos horários definidos; anexos são uploadados via tabela polimórfica.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Expandir DealActivity além dos 4 kinds do M001. Tabelas auxiliares para attendees (RSVP), recurrences (RFC 5545 mini), attachments. Endpoints subresources §6.4 completos.",
+      "success_criteria": "Specs cobrem cada kind novo + tabelas auxiliares. Recurrence spec testa frequência daily/weekly/monthly. Reminder spec testa multi-reminder. UI expõe novos kinds com subtypes.",
+      "proof_level": "contract + integration",
+      "integration_closure": "Tab Atividades do drawer ganha selet de kind expandido; FullCalendar.io ou similar integrado no Timeline; anexos usam Attachment polimórfico existente do Chatwoot.",
+      "observability_impact": "Counter expandido crm_activities_total inclui kinds novos; histogram crm_activity_reminder_lag_seconds.",
+      "sequence": 6,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S07",
+      "title": "Supervisor role + pipeline privado + pipeline_members",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S06"
+      ],
+      "demo": "Admin cria pipeline privado com 2 membros; agent não-membro recebe 404 ao listar; supervisor vê todos pipelines mas só admin configura. Bulk move disponível para supervisor.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Adicionar nível supervisor (feature-flagged) e pipeline privado completo. Matriz §8.2 aplicada via Pundit. Specs multi-tenant.",
+      "success_criteria": "Spec cross-account/cross-membership não vaza dados. Toggle :crm_supervisor_role funciona. Bulk delete continua admin-only. Membership UI funciona.",
+      "proof_level": "contract + integration",
+      "integration_closure": "Pundit policies atualizadas globalmente; scope :visible_to(user) implementado em Pipeline e Deal; queries default usam o scope.",
+      "observability_impact": "Logs pipeline.member_added/removed; sem métricas específicas.",
+      "sequence": 7,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S08",
+      "title": "DealProducts + templates extras + settings de pipeline expostos",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S07"
+      ],
+      "demo": "Adicionar item de produto a um deal via UI; selecionar template support-sac em /pipelines/from_template; admin altera abandon_after_days no settings dialog.",
+      "created_at": "2026-05-09T15:16:45.151Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Fechar o backlog: DealProducts CRUD + UI, templates support-sac/retention/collections/recruiting, expor settings de pipeline (auto_resolve_conversation_on_won, abandon_after_days, etc) na UI.",
+      "success_criteria": "DealProduct request specs passam. Templates extras seedados via code; from_template aceita key=support-sac. Settings dialog persiste em Pipeline.settings.",
+      "proof_level": "contract",
+      "integration_closure": "DealProducts ligados ao deal value (callback recomputa total se produto alterado). Settings dialog usa endpoint /pipelines/:id PATCH.",
+      "observability_impact": "Sem instrumentação nova; reusa logs deal.updated.",
+      "sequence": 8,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    }
+  ],
+  "tasks": [
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Criar migrations das 6 tabelas CRM (puramente aditivas)",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Gerar 6 migrations Rails criando pipelines, pipeline_stages, lost_reasons, deals, deal_activities, conversation_ai_enrichments com colunas, indexes e constraints conforme §3.2.1-§3.2.4, §3.2.6 da spec. Reduzir DealActivity ao subset M1 (sem deal_activity_reminders/attendees/recurrences/attachments — só 4 kinds, sem recurrence_id/parent_activity_id usados em runtime). pipeline_stages: check constraint stage_won_xor_lost. deals: unique index conversation_id WHERE deleted_at IS NULL; position decimal(18,9). conversation_ai_enrichments: 1:1 conversation_id unique, colunas ai_first_message:text, ai_summary:text, ai_source:string, ai_qualified_at:datetime, ai_summary_updated_at:datetime, todas nullable. NÃO criar pipeline_templates (D005 — templates em código). NÃO alterar tabelas existentes.",
+      "estimate": "1h30m",
+      "files": [
+        "db/migrate/20260509000001_create_pipelines.rb",
+        "db/migrate/20260509000002_create_pipeline_stages.rb",
+        "db/migrate/20260509000003_create_lost_reasons.rb",
+        "db/migrate/20260509000004_create_deals.rb",
+        "db/migrate/20260509000005_create_deal_activities.rb",
+        "db/migrate/20260509000006_create_conversation_ai_enrichments.rb",
+        "db/schema.rb"
+      ],
+      "verify": "bundle exec rails db:migrate && bundle exec rails db:rollback STEP=6 && bundle exec rails db:migrate && ! grep -E 'alter_table\\s+:(conversations|contacts|users|accounts|inboxes|teams|messages)' db/migrate/20260509000*.rb",
+      "inputs": [
+        "docs/crm/CHATWOOT_CRM_SPEC.md §3.2",
+        ".gsd/DECISIONS.md D003 D005"
+      ],
+      "expected_output": [
+        "6 migrations aplicadas",
+        "schema.rb atualizado",
+        "0 ALTER em tabelas existentes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Pipeline + PipelineStage models com validações e associações",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "app/models/pipeline.rb: belongs_to :account, has_many :pipeline_stages -> { order(position: :asc) }, has_many :deals, has_many :lost_reasons (via account scope), validates :name presence, :slug presence/uniqueness scoped to account_id (only active), default_scope -> { where(deleted_at: nil) }, scope :default_for_account. Soft-delete via deleted_at (paranoia-style à mão). app/models/pipeline_stage.rb: belongs_to :pipeline, belongs_to :account, validates :name/:slug/:position presence, validate :won_lost_mutually_exclusive, validates :probability inclusion 0..100, scope :ordered. Specs em spec/models/pipeline_spec.rb e spec/models/pipeline_stage_spec.rb (FactoryBot factories em spec/factories/pipelines.rb e pipeline_stages.rb).",
+      "estimate": "1h",
+      "files": [
+        "app/models/pipeline.rb",
+        "app/models/pipeline_stage.rb",
+        "spec/factories/pipelines.rb",
+        "spec/factories/pipeline_stages.rb",
+        "spec/models/pipeline_spec.rb",
+        "spec/models/pipeline_stage_spec.rb"
+      ],
+      "verify": "bundle exec rspec spec/models/pipeline_spec.rb spec/models/pipeline_stage_spec.rb",
+      "inputs": [
+        "T01 migrations",
+        "spec §3.2.1 §3.2.2"
+      ],
+      "expected_output": [
+        "Models com associations + validations",
+        "specs verdes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Deal model com weighted_value computed + status state machine + position decimal",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "app/models/deal.rb: belongs_to :account, :pipeline, :pipeline_stage, :contact, optional :conversation, optional :user (owner), optional :assignee (class_name User), optional :lost_reason. Validates :title presence, :status inclusion %w[open won lost abandoned], :priority inclusion %w[low normal high urgent]. before_validation :set_initial_position (default 1.0 se nil). before_save :recompute_weighted_value (value * stage.probability / 100). before_save :set_stage_entered_at quando pipeline_stage_id muda. before_save :sync_status_with_stage (stage.is_won → status=won + won_at + closed_at; stage.is_lost → status=lost + closed_at). Soft-delete via deleted_at, default_scope where deleted_at IS NULL. Specs cobrindo: weighted_value recompute, status sync, conversation 1:1 unicidade (segundo deal pra mesma conversation falha), position default. Factory deal em spec/factories/deals.rb.",
+      "estimate": "2h",
+      "files": [
+        "app/models/deal.rb",
+        "spec/factories/deals.rb",
+        "spec/models/deal_spec.rb"
+      ],
+      "verify": "bundle exec rspec spec/models/deal_spec.rb",
+      "inputs": [
+        "T02 Pipeline+Stage models",
+        "spec §3.2.3",
+        ".gsd/DECISIONS.md D006"
+      ],
+      "expected_output": [
+        "Deal model com callbacks",
+        "spec passa incluindo concorrência de conversation_id unique"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "LostReason + DealActivity (4 kinds) + ConversationAiEnrichment models",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "app/models/lost_reason.rb: belongs_to :account, validates :label/:slug presence, slug unique per account. app/models/deal_activity.rb: belongs_to :account, optional :deal, optional :contact, optional :user, optional created_by/completed_by (User). Validates :kind inclusion %w[task note system event] (apenas 4 — D003), :status inclusion %w[planned in_progress completed canceled missed snoozed]. Scopes :pending, :for_deal. before_save :touch_deal_last_activity_at (atualiza Deal#last_activity_at). app/models/conversation_ai_enrichment.rb: belongs_to :conversation, belongs_to :account. Specs em spec/models/{lost_reason,deal_activity,conversation_ai_enrichment}_spec.rb cobrindo validations e a touch chain. Factories em spec/factories/.",
+      "estimate": "1h30m",
+      "files": [
+        "app/models/lost_reason.rb",
+        "app/models/deal_activity.rb",
+        "app/models/conversation_ai_enrichment.rb",
+        "spec/factories/lost_reasons.rb",
+        "spec/factories/deal_activities.rb",
+        "spec/factories/conversation_ai_enrichments.rb",
+        "spec/models/lost_reason_spec.rb",
+        "spec/models/deal_activity_spec.rb",
+        "spec/models/conversation_ai_enrichment_spec.rb"
+      ],
+      "verify": "bundle exec rspec spec/models/lost_reason_spec.rb spec/models/deal_activity_spec.rb spec/models/conversation_ai_enrichment_spec.rb",
+      "inputs": [
+        "T01 migrations",
+        "T03 Deal model",
+        "spec §3.2.4 §3.2.6 §17.3"
+      ],
+      "expected_output": [
+        "3 models com validations",
+        "kind whitelist 4 valores",
+        "specs verdes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T05",
+      "title": "Aditive concerns CRM em Account/Conversation/Contact/User via prepend_mod_with",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "app/models/concerns/crm/account_associations.rb: extend ActiveSupport::Concern, included { has_many :pipelines, has_many :deals, has_many :lost_reasons, has_many :deal_activities }. crm/conversation_associations.rb: included { has_one :deal, dependent: :nullify; has_one :ai_enrichment, class_name: 'ConversationAiEnrichment', dependent: :destroy }. crm/contact_associations.rb: included { has_many :deals, dependent: :restrict_with_error }. crm/user_associations.rb: included { has_many :owned_deals, class_name: 'Deal', foreign_key: :user_id; has_many :assigned_deals, class_name: 'Deal', foreign_key: :assignee_id }. Wire em Account/Conversation/Contact/User via prepend_mod_with('Crm::AccountAssociations') etc. Specs em spec/models/concerns/crm/*.rb que verificam associações funcionam (Account.first.pipelines retorna ActiveRecord::Relation; Conversation reflexão has_one :deal).",
+      "estimate": "1h",
+      "files": [
+        "app/models/concerns/crm/account_associations.rb",
+        "app/models/concerns/crm/conversation_associations.rb",
+        "app/models/concerns/crm/contact_associations.rb",
+        "app/models/concerns/crm/user_associations.rb",
+        "app/models/account.rb",
+        "app/models/conversation.rb",
+        "app/models/contact.rb",
+        "app/models/user.rb",
+        "spec/models/concerns/crm/account_associations_spec.rb",
+        "spec/models/concerns/crm/conversation_associations_spec.rb"
+      ],
+      "verify": "bundle exec rspec spec/models/concerns/crm/ && bundle exec rails runner 'puts Account.new.respond_to?(:pipelines) && Conversation.new.respond_to?(:deal) && Contact.new.respond_to?(:deals)' | grep -q true",
+      "inputs": [
+        "T02 T03 T04 models",
+        "AGENTS.md Enterprise overlay",
+        "Chatwoot prepend_mod_with pattern"
+      ],
+      "expected_output": [
+        "4 concerns aditivos",
+        "modelos existentes não tocados na lógica",
+        "specs verdes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T06",
+      "title": "Seeders::CrmTemplateSeeder + rake task crm:seed_default_pipeline",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "lib/seeders/crm_template_seeder.rb: classe Seeders::CrmTemplateSeeder.new(account:, template_key: 'sales-generic'). #perform! cria Pipeline (is_default=true, template_key, template_version='1.0.0') + 7 PipelineStages do template sales-generic (Triagem→Qualificado→Proposta enviada→Negociação→Ganho→Perdido→Descartado) em transaction. Idempotente: find_or_create_by account+slug. Templates inline em constante TEMPLATES (D005 — sem tabela pipeline_templates). Loga via Rails.logger.info '[CrmTemplateSeeder]'. lib/tasks/crm.rake: namespace :crm do; desc 'Seed default sales pipeline for account'; task :seed_default_pipeline, [:account_id] => :environment do |_, args|; account = Account.find(args[:account_id]); result = Seeders::CrmTemplateSeeder.new(account: account).perform!; puts \"  ✅ #{result.pipeline.name} (ID: #{result.pipeline.id}) com #{result.stages.size} stages\". Spec em spec/lib/seeders/crm_template_seeder_spec.rb com idempotência e validações.",
+      "estimate": "1h",
+      "files": [
+        "lib/seeders/crm_template_seeder.rb",
+        "lib/tasks/crm.rake",
+        "spec/lib/seeders/crm_template_seeder_spec.rb"
+      ],
+      "verify": "bundle exec rspec spec/lib/seeders/crm_template_seeder_spec.rb && bundle exec rails runner 'a = Account.first; r = Seeders::CrmTemplateSeeder.new(account: a).perform!; raise \"need 7 stages\" unless r.stages.size == 7; raise \"need is_default\" unless r.pipeline.is_default; r2 = Seeders::CrmTemplateSeeder.new(account: a).perform!; raise \"not idempotent\" unless r.pipeline.id == r2.pipeline.id'",
+      "inputs": [
+        "T02 Pipeline/Stage models",
+        "spec §9.1 §9.6",
+        ".gsd/DECISIONS.md D005"
+      ],
+      "expected_output": [
+        "Seeder idempotente",
+        "rake task funcional",
+        "1 pipeline default + 7 stages"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    }
+  ],
+  "decisions": [
+    {
+      "seq": 1,
+      "id": "D001",
+      "when_context": "M001 / fluxo F1",
+      "scope": "product",
+      "decision": "Estratégia de auto-criação de Deal ao receber mensagem inbound",
+      "choice": "first_contact (default), com 'always' e 'manual' selecionáveis via account.settings.crm.auto_create_deal_strategy",
+      "rationale": "D1 v1.0 ('sempre cria card') gera lixo na Triagem em conta sem IA configurada e expõe falsos-positivos da IA silenciosos. §17.2 da spec recomenda tornar opcional. 'first_contact' cria deal só pra contato sem deal aberto no pipeline default — preserva narrativa 'conversa = card' sem encher Triagem com 'oi'/spam/teste de canal. 'always' permanece disponível pra tenants que quiserem v1.0 puro; 'manual' (botão promote) pra quem prefere controle total.",
+      "revisable": "sim — após adoção real, pode virar 'always' por default se IA for confiável e o vocabulário 'descartado' for trabalhado pela UX.",
+      "made_by": "human",
+      "source": "discussion",
+      "superseded_by": null
+    },
+    {
+      "seq": 2,
+      "id": "D002",
+      "when_context": "M001 schema / M002 IA",
+      "scope": "architecture",
+      "decision": "Onde guardar campos de enriquecimento por IA da conversation",
+      "choice": "Tabela separada conversation_ai_enrichments (1:1 opcional com conversations) em vez de adicionar colunas em conversations",
+      "rationale": "§17.3 da spec: adicionar 5 colunas (ai_first_message, ai_summary, ai_source, ai_qualified_at, ai_summary_updated_at) na tabela mais quente do Chatwoot tem custo permanente de manutenção upstream e bloat de row. Tabela separada deixa conversations intacta — diff de merge zero — ao custo irrelevante de 1 join no drawer. Como IA inteira é M2, no M1 a tabela existe apenas como destino preparado (migration aditiva); preenchimento real só no M2.",
+      "revisable": "não — flipar pra coluna inline depois é migration de dados pesada. Decidir agora poupa retrabalho.",
+      "made_by": "human",
+      "source": "discussion",
+      "superseded_by": null
+    },
+    {
+      "seq": 3,
+      "id": "D003",
+      "when_context": "M001 schema / Drawer",
+      "scope": "architecture",
+      "decision": "Granularidade de DealActivity.kind no M1",
+      "choice": "4 kinds: task, note, system, event (call/meeting/email entram como event com subtype). Sem attendees/recurrence/parent_activity/multi-reminder no M1. reminder_at simples + único ActivityReminderJob.",
+      "rationale": "§17.3 da spec reduz os 9 kinds originais (task/call/meeting/email/whatsapp/sms/note/system/custom) a 4. Drawer precisa de histórico (system) e tasks/notes do agente — quem quer registrar 'liguei' ou 'reuni' usa kind=event com subtype. Tabelas auxiliares de attendees (RSVP), recurrence (RFC 5545 mini) e attachments são calendar product e ficam fora. DealActivity NÃO duplica Message — drawer faz merge timeline lendo conversations.messages + deal_activities (D7).",
+      "revisable": "sim — kinds adicionais e tabelas auxiliares vêm no M2 sem migration breaking; só novas colunas/tabelas opcionais.",
+      "made_by": "human",
+      "source": "discussion",
+      "superseded_by": null
+    },
+    {
+      "seq": 4,
+      "id": "D004",
+      "when_context": "M001 (cortar) / M002 (estender AutomationRule)",
+      "scope": "architecture",
+      "decision": "Onde modelar pipeline_automation_rules",
+      "choice": "Adiar tabela pipeline_automation_rules pro M2. Quando voltar, estender o AutomationRule existente do Chatwoot (adicionar conditions e actions de Deal) em vez de motor paralelo.",
+      "rationale": "§11.9 e §17.3 da spec: ter dois motores (AutomationRule do Chatwoot que atua sobre conversations + PipelineAutomationRule que atua sobre deals) é confusão direta para admins. M1 não precisa de automation engine — F1/F2/F4/F5 cobrem o básico. Adiar pro M2 com a diretiva de estender o motor existente evita duplicação e simplifica admin UI.",
+      "revisable": "sim — se durante M2 estender AutomationRule for inviável tecnicamente, reabrir tabela própria.",
+      "made_by": "human",
+      "source": "discussion",
+      "superseded_by": null
+    },
+    {
+      "seq": 5,
+      "id": "D005",
+      "when_context": "M001 schema / sempre",
+      "scope": "architecture",
+      "decision": "Compatibilidade com upstream Chatwoot",
+      "choice": "Todas as migrations do CRM são puramente aditivas (criar tabelas novas, adicionar associações Ruby). Zero ALTER em colunas existentes de conversations, contacts, users, accounts, inboxes, teams.",
+      "rationale": "§12.4 e §17.1 da spec. Manter merge contínuo com upstream é caminho B do roadmap — D2 (tabela ai_enrichments separada) já remove os 5 ALTERs em conversations propostos pela v1.0. Diferenças de comportamento (ex: associações Ruby has_one :deal) ficam em arquivos novos; modificações em modelos existentes (Contact, Conversation) usam concerns/decorators carregados condicionalmente.",
+      "revisable": "não — quebrar essa regra inviabiliza o caminho B inteiro.",
+      "made_by": "collaborative",
+      "source": "discussion",
+      "superseded_by": null
+    },
+    {
+      "seq": 6,
+      "id": "D006",
+      "when_context": "M001 fluxo F6 / Drawer S08",
+      "scope": "architecture",
+      "decision": "Fonte de verdade para mensagens dentro do drawer do Deal",
+      "choice": "Mensagens permanecem em conversations.messages. DealActivity é só pra task/note/system/event. UI do drawer faz merge timeline lendo as duas fontes ordenadas por created_at.",
+      "rationale": "§17.3 fim da spec. F6 da v1.0 criava DealActivity kind='whatsapp' a cada mensagem inbound — duplicação total da tabela messages. Custo de escrita dobrado, custo de auditoria duplicado, UI confusa (tab Conversa lê messages, tab Atividades repete tudo). Manter Message como única fonte e fazer merge front-end é mais simples e mais correto.",
+      "revisable": "não — alteraria contratos de muitos componentes downstream.",
+      "made_by": "human",
+      "source": "discussion",
+      "superseded_by": null
+    }
+  ],
+  "verification_evidence": []
+}

@@ -78,6 +78,34 @@ describe Whatsapp::IncomingMessageService do
         expect(contact_inbox.conversations.last.messages.last.content).to eq(params[:messages].first[:text][:body])
       end
 
+      it 'reuses the same conversation for consecutive incoming messages before any outgoing reply when lock is enabled' do
+        whatsapp_channel.inbox.update(lock_to_single_conversation: true)
+
+        3.times do |i|
+          burst_params = {
+            'contacts' => [{ 'profile' => { 'name' => 'Sojan Jose' }, 'wa_id' => wa_id }],
+            'messages' => [{ 'from' => wa_id, 'id' => "burst_msg_#{i}", 'text' => { 'body' => "msg #{i}" },
+                             'timestamp' => (1_633_034_394 + i).to_s, 'type' => 'text' }]
+          }.with_indifferent_access
+          described_class.new(inbox: whatsapp_channel.inbox, params: burst_params).perform
+        end
+
+        expect(whatsapp_channel.inbox.conversations.count).to eq(1)
+        expect(whatsapp_channel.inbox.conversations.first.messages.where(message_type: :incoming).count).to eq(3)
+      end
+
+      it 'reuses the same conversation after an outgoing reply when lock is enabled' do
+        whatsapp_channel.inbox.update(lock_to_single_conversation: true)
+        contact_inbox = create(:contact_inbox, inbox: whatsapp_channel.inbox, source_id: wa_id)
+        conversation = create(:conversation, inbox: whatsapp_channel.inbox, contact_inbox: contact_inbox)
+        create(:message, conversation: conversation, inbox: whatsapp_channel.inbox, message_type: :outgoing)
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+
+        expect(whatsapp_channel.inbox.conversations.count).to eq(1)
+        expect(conversation.reload.messages.where(message_type: :incoming).last.content).to eq(params[:messages].first[:text][:body])
+      end
+
       it 'will not create duplicate messages when same message is received' do
         described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
         expect(whatsapp_channel.inbox.messages.count).to eq(1)

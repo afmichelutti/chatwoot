@@ -110,3 +110,9 @@ docs/md/
 
 # Brand assets customizados
 public/brand-assets/
+
+# Segredos e PII — nunca commitar
+.env.debug
+scan_karen.mjs
+docs/riva/
+docs/sql/*.rejeitados.csv

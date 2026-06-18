@@ -1,0 +1,13 @@
+{
+  "name": "import-riva",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Normaliza XLSX de pacientes Riva para CSV E.164 pronto para importar no Chatwoot",
+  "type": "commonjs",
+  "scripts": {
+    "limpar": "node limpar-contatos.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
